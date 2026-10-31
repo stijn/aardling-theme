@@ -1,0 +1,57 @@
+name: Release
+
+# Every push to main: if the Version: header in style.css has no release yet,
+# lint, build aardling.zip (folder aardling/ inside) and create release vX.Y.Z.
+# aardling.com picks the release up through plugin-update-checker and auto-updates.
+# Pushes that don't change the version do nothing.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read version
+        id: v
+        run: |
+          HEADER=$(grep -m1 -E '^Version:' style.css | sed -E 's/Version:\s*//' | tr -d '[:space:]')
+          CONST=$(grep -m1 "AARDLING_THEME_VERSION'," functions.php | sed -E "s/.*'([0-9.]+)'.*/\1/")
+          echo "header=$HEADER const=$CONST"
+          test "$HEADER" = "$CONST"
+          echo "version=$HEADER" >> "$GITHUB_OUTPUT"
+      - name: Skip if released
+        id: exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.v.outputs.version }}" >/dev/null 2>&1; then echo "skip=true" >> "$GITHUB_OUTPUT"; else echo "skip=false" >> "$GITHUB_OUTPUT"; fi
+      - name: Lint PHP
+        if: steps.exists.outputs.skip == 'false'
+        run: |
+          php -l functions.php
+          php -l inc/updater.php
+      - name: Build zip
+        if: steps.exists.outputs.skip == 'false'
+        run: |
+          mkdir -p build/aardling
+          cp -r style.css functions.php inc vendor build/aardling/
+          cd build && zip -qr ../aardling.zip aardling
+      - name: Create release
+        if: steps.exists.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.v.outputs.version }}"
+          NOTES=$(awk -v v="$V" '$0 == "## "v {f=1; next} /^## / {f=0} f' CHANGELOG.md)
+          gh release create "v$V" aardling.zip --target "$GITHUB_SHA" --title "v$V" --notes "${NOTES:-Release v$V}"
