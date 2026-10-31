@@ -45,7 +45,7 @@ jobs:
         if: steps.exists.outputs.skip == 'false'
         run: |
           mkdir -p build/aardling
-          cp -r style.css functions.php inc vendor build/aardling/
+          cp -r style.css functions.php inc vendor LICENSE build/aardling/
           cd build && zip -qr ../aardling.zip aardling
       - name: Create release
         if: steps.exists.outputs.skip == 'false'

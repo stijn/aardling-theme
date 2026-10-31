@@ -1,6 +1,6 @@
 # aardling-theme
 
-Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nineteen does the styling; this theme holds the site's own changes and updates itself from this private repo.
+Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nineteen does the styling; this theme holds the site's own changes and updates itself from this repo.
 
 ## What it changes
 - Drops Font Awesome, which WP Mobile Bottom Menu loads on every page, and draws the bottom menu's three icons (home, compass, user; solid and outline) as inline SVG masks.
@@ -15,11 +15,15 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 
 ## One-time setup on the site
 1. Install `aardling.zip` from the latest release manually (Appearance > Themes > Add New Theme > Upload Theme) and activate it.
-2. Give the theme read access to this repo, one of:
-   - edit the fine-grained token Aardling Schuif already uses (GitHub > Settings > Developer settings > Fine-grained tokens) and add `stijn/aardling-theme` to its repositories; nothing needs pasting, or
-   - create a new fine-grained token for `stijn/aardling-theme` only, permission Contents: Read-only, and paste it on Appearance > Aardling (or `define( 'AARDLING_THEME_GITHUB_TOKEN', '...' );` in wp-config.php).
+2. Nothing else: the repo is public. A GitHub token only lifts GitHub's rate limit (60 anonymous requests an hour, shared by every site on the server's IP). The theme borrows Aardling Schuif's token when it has none of its own; any fine-grained token can read public repos. To set one anyway: Appearance > Aardling, or `define( 'AARDLING_THEME_GITHUB_TOKEN', '...' );` in wp-config.php.
 
 ## Safety
 - The abilities only report and install updates of this theme. Nothing touches content, settings, plugins or other themes.
 - The token is never shown after saving and never returned by an ability.
-- Vendored: plugin-update-checker 5.6 by Yahnis Elsts (MIT), in `vendor/plugin-update-checker`.
+
+## License and credits
+- Aardling is free software under the GNU General Public License v2 or later; see [LICENSE](LICENSE). That's the same licence as WordPress and Twenty Nineteen.
+- Parent theme: [Twenty Nineteen](https://wordpress.org/themes/twentynineteen/) by the WordPress team, GPL v2 or later. This theme only loads it; no Twenty Nineteen files are copied here.
+- Vendored: [plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) 5.6 by Jānis Elsts, MIT licence (`vendor/plugin-update-checker/license.txt`), compatible with the GPL.
+- The bottom menu icons are original SVG drawings made for this theme. No Font Awesome files or artwork are included; the CSS only targets the class names WP Mobile Bottom Menu prints.
+- WordPress is a trademark of the WordPress Foundation. This theme is not affiliated with or endorsed by it, and doesn't use the name in its own.

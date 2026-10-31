@@ -1,15 +1,16 @@
 <?php
 /**
- * Self-updating from the private GitHub repo stijn/aardling-theme.
+ * Self-updating from the public GitHub repo stijn/aardling-theme.
  *
  * How it works:
  * - plugin-update-checker (MIT, vendored) looks at the latest GitHub release of the repo
  *   and offers its "aardling.zip" asset as a theme update.
- * - The repo is private, so it needs a read-only GitHub token. In order of preference:
- *   define( 'AARDLING_THEME_GITHUB_TOKEN', '...' ); in wp-config.php, the field on
- *   Appearance > Aardling, or the token Aardling Schuif already uses (give that fine-grained
- *   token access to stijn/aardling-theme as well and nothing needs pasting).
- *   The token is never shown again after saving and is never returned by any ability.
+ * - The repo is public, so no token is needed. A token only lifts GitHub's rate limit of 60
+ *   anonymous requests an hour, which every site on a shared server's IP draws from. In order
+ *   of preference: define( 'AARDLING_THEME_GITHUB_TOKEN', '...' ); in wp-config.php, the field
+ *   on Appearance > Aardling, or the token Aardling Schuif already uses (fine-grained tokens can
+ *   always read public repos). The token is never shown again after saving and is never
+ *   returned by any ability.
  * - WordPress auto-updates are switched on for this theme only.
  * - Two abilities (theme-status, self-update) let the MCP connector check and apply an update
  *   right away instead of waiting for the twice-daily WordPress cron.
@@ -115,8 +116,8 @@ add_action( 'admin_menu', function () {
 		$labels = array(
 			'theme-config' => 'set in wp-config.php (AARDLING_THEME_GITHUB_TOKEN).',
 			'theme-option' => 'saved on this page.',
-			'schuif'       => 'borrowed from Aardling Schuif. That token must also be allowed to read stijn/aardling-theme.',
-			''             => 'none found, so updates cannot be fetched.',
+			'schuif'       => 'borrowed from Aardling Schuif, which lifts GitHub\'s rate limit.',
+			''             => 'none. Updates still work, but anonymous requests from a shared server can hit GitHub\'s rate limit.',
 		);
 		$state  = aardling_theme_update_checker()->getUpdateState();
 		$update = aardling_theme_update_checker()->getUpdate();
@@ -129,7 +130,7 @@ add_action( 'admin_menu', function () {
 			<?php else : ?>
 				No newer release found<?php echo $state && $state->getLastCheck() ? ' (last check ' . esc_html( human_time_diff( $state->getLastCheck() ) ) . ' ago)' : ''; ?>.
 			<?php endif; ?></p>
-			<p>Updates come from the private GitHub repo <code>stijn/aardling-theme</code> (latest release, asset <code>aardling.zip</code>). Auto-updates are on for this theme.</p>
+			<p>Updates come from the public GitHub repo <code>stijn/aardling-theme</code> (latest release, asset <code>aardling.zip</code>). Auto-updates are on for this theme.</p>
 			<p>GitHub token: <?php echo esc_html( $labels[ $source ] ); ?></p>
 			<?php if ( 'theme-config' !== $source ) : ?>
 				<form method="post" action="options.php">
@@ -139,7 +140,7 @@ add_action( 'admin_menu', function () {
 							<th scope="row"><label for="aardling_theme_github_token">GitHub token</label></th>
 							<td>
 								<input type="password" id="aardling_theme_github_token" name="aardling_theme_github_token" value="" class="regular-text" autocomplete="off" placeholder="<?php echo 'theme-option' === $source ? esc_attr( 'Saved. Paste a new one to replace it.' ) : ''; ?>">
-								<p class="description">Not needed when Aardling Schuif's token can read this repo. Otherwise: fine-grained personal access token, repository <code>stijn/aardling-theme</code>, permission Contents: Read-only. Leave empty to keep a saved token, or type __clear__ to remove it.</p>
+								<p class="description">Optional: the repo is public, and Aardling Schuif's token is used when this field is empty. A token only lifts GitHub's rate limit; any fine-grained token works. Leave empty to keep a saved token, or type __clear__ to remove it.</p>
 							</td>
 						</tr>
 					</table>
@@ -248,9 +249,6 @@ add_action( 'wp_abilities_api_init', function () {
 		'permission_callback' => $can_update,
 		'execute_callback'    => function ( $input = null ) use ( $status ) {
 			$before = $status( true );
-			if ( ! $before['token_configured'] ) {
-				return new WP_Error( 'aardling_theme_no_token', 'No GitHub token configured (Appearance > Aardling).' );
-			}
 			if ( empty( $before['available_version'] ) || version_compare( $before['available_version'], AARDLING_THEME_VERSION, '<=' ) ) {
 				return array_merge( $before, array( 'updated' => false, 'message' => 'Already up to date.' ) );
 			}

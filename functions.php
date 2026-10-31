@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.1.0' );
+define( 'AARDLING_THEME_VERSION', '1.1.1' );
 
 require_once __DIR__ . '/inc/updater.php';
 

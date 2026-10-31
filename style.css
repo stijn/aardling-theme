@@ -1,14 +1,18 @@
 /*
 Theme Name: Aardling
 Template: twentynineteen
-Description: Child theme of Twenty Nineteen for aardling.com. Swaps the bottom menu's Font Awesome icon font for three inline SVG icons, and updates itself from the private GitHub repo stijn/aardling-theme. Twenty Nineteen's own stylesheet still does all the styling.
-Version: 1.1.0
+Description: Child theme of Twenty Nineteen for aardling.com. Swaps the bottom menu's Font Awesome icon font for three inline SVG icons, and updates itself from its GitHub repo stijn/aardling-theme. Twenty Nineteen's own stylesheet still does all the styling.
+Version: 1.1.1
 Author: Stijn Vogels
 Requires at least: 6.9
 Requires PHP: 7.4
 License: GNU General Public License v2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: aardling
+
+Copyright 2026 Stijn Vogels.
+Aardling is distributed under the terms of the GNU GPL v2 or later (see LICENSE).
+It is a child theme of Twenty Nineteen by the WordPress team, also GPL v2 or later.
 */
 
 /*
