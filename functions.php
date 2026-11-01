@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.1.1' );
+define( 'AARDLING_THEME_VERSION', '1.1.2' );
 
 require_once __DIR__ . '/inc/updater.php';
 
@@ -81,6 +81,22 @@ function aardling_bottom_menu_icons_css() {
 
 	return $css;
 }
+
+/**
+ * Rank Math empties the whole WP Super Cache whenever its sitemap goes out of
+ * date, which is on every post save and every term change. That throws away
+ * the preloaded pages and stops a running preload. The sitemaps aren't
+ * page-cached, and WP Super Cache clears the post, the homepage and the
+ * archives itself on publish, so skip Rank Math's purge for sitemap changes.
+ */
+add_filter(
+	'rank_math/pre_clear_cache',
+	function ( $skip, $context ) {
+		return $skip || 0 === strpos( (string) $context, 'sitemap' );
+	},
+	10,
+	2
+);
 
 /**
  * Customizer settings (colours, logo, menus, Additional CSS, Options for

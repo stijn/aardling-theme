@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.1.2
+- Stops Rank Math from emptying the whole WP Super Cache every time its sitemap goes out of date (every post save and every term change). That purge threw away the preloaded pages and stopped a running preload. WP Super Cache still clears the post, the homepage and the archives itself on publish.
+
 ## 1.1.1
 - The repo is public now, so updates work without a token. A token (the theme's own or Aardling Schuif's) is only used to lift GitHub's rate limit.
 - Adds the GPL v2 licence (LICENSE, also inside aardling.zip) and a copyright and licence notice in style.css.
