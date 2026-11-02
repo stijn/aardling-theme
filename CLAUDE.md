@@ -7,6 +7,7 @@
 - Abilities in this theme may only report and install updates of this theme. Never add abilities that change content, settings, users, plugins or other themes.
 - Never print, log or return the GitHub token or the Cloudflare token.
 - The Cloudflare purge (inc/cloudflare.php) may only clear Cloudflare's cache for aardling.com. Never give the token more than Zone > Cache Purge, and never make it change zone settings, DNS or rules.
+- The reading boxes (inc/reads.php) use a second Cloudflare token that may only read analytics: Account > Account Analytics > Read. Never print, log or return it, and never use it for anything but the Web Analytics query.
 - This repo is public. Never commit secrets, tokens, personal email addresses, drafts or anything from wp-config.php. Commit as `102652+stijn@users.noreply.github.com`.
 - Keep the theme GPL v2 or later. Only bring in code under a GPL-compatible licence (MIT, BSD, GPL v2+), keep its licence file, and list it under "License and credits" in README.md. Code under GPL v3 only (Twentig is GPLv3 or later) means switching this theme to GPL v3 first: ask Stijn. Never copy icons, fonts or images whose licence asks for attribution or forbids reuse; draw them or use public-domain ones.
 - Don't use "WordPress" as part of the theme's name, and don't use the WordPress logo.

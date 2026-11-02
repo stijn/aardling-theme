@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.0
+- Three reading boxes under each post, before the footer: Suggested (posts sharing the most tags, then the same category), Trending (most read in the last 7 days, numbered) and Recently (the newest posts, the first with its thumbnail). Box titles follow the site language (Leestips, Populair, Recent).
+- Trending comes from Cloudflare Web Analytics through its GraphQL API, refreshed hourly. It needs the account ID, the Web Analytics site tag and a second, read-only token (Account Analytics Read) on Appearance > Aardling; until then, or after three days of failed refreshes, the box stays hidden.
+- Trending and Recently load from /aardling-reads.json with a few lines of script, so pages Cloudflare cached weeks ago still show current lists. The theme clears that file at Cloudflare whenever a list changes. Suggested is part of the page.
+
 ## 1.3.3
 - Drops the DNS prefetch hint for www.googletagmanager.com from every page: since 1.3.2 nothing loads from there.
 

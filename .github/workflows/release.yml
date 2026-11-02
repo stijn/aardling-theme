@@ -44,6 +44,7 @@ jobs:
           php -l inc/cloudflare.php
           php -l inc/customizer.php
           php -l inc/analytics.php
+          php -l inc/reads.php
       - name: Build zip
         if: steps.exists.outputs.skip == 'false'
         run: |

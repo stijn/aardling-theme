@@ -9,6 +9,7 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 - Twenty Nineteen options in Appearance > Customize > Aardling (`inc/customizer.php`): everything Options for Twenty Nineteen offers, free and premium, with the same setting names so saved values carry over. Off while that plugin is active.
 - Stops Rank Math from emptying the whole WP Super Cache whenever its sitemap changes.
 - Clears changed pages from Cloudflare's cache (see below), so a Cloudflare Cache Rule can keep the pages at the edge without APO.
+- Reading boxes under each post (`inc/reads.php`): Suggested, Trending and Recently, see below.
 - Loads GA4 through Google tag gateway (`inc/analytics.php`): the Google tag comes from `aardling.com/ptp3/`, which Cloudflare relays to Google. Prints the tag itself when Site Kit's Analytics code is off, or points Site Kit's script at the path when it's on. Not for logged-in users, and no DNS prefetch for googletagmanager.com. Override with `AARDLING_THEME_GA4_ID` and `AARDLING_THEME_GA4_PATH` in wp-config.php.
 
 ## Cloudflare cache purge
@@ -16,6 +17,12 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 - A post change clears the post's path, the homepage and its feed, `/page/`, and the post's term, author and year archives (prefixes, so their `/page/N/` and `/feed/` go too). Site-wide changes purge everything.
 - Sent once at the end of the request; more than 300 items becomes a purge of everything. Free plan limits: 5 prefix or everything calls a minute (bursts of 25), 800 URLs a second.
 - "Test: clear the homepage" checks the zone ID and token; the page shows the last purge and any Cloudflare error.
+
+## Reading boxes
+- Suggested is rendered into the page: posts sharing the most tags with the current one, then posts from its categories.
+- Trending and Recently are empty boxes in the page, filled by an inline script from `/aardling-reads.json` (served by the theme, cached by Cloudflare's page rule, cleared by the theme when a list changes). Without JavaScript they stay hidden.
+- Recently is rebuilt whenever a post is published, updated or unpublished.
+- Trending is rebuilt hourly from Cloudflare Web Analytics (`rumPageloadEventsAdaptiveGroups`, last 7 days, bots excluded), matched to published posts. Needs the account ID, the site tag and an API token with only Account > Account Analytics > Read: on Appearance > Aardling, or `AARDLING_THEME_CLOUDFLARE_ACCOUNT`, `AARDLING_THEME_WEB_ANALYTICS_SITE` and `AARDLING_THEME_CLOUDFLARE_ANALYTICS_TOKEN` in wp-config.php. The box shows from 3 posts; after three days without a good answer it hides.
 
 ## Release flow (fully automated)
 1. Change code, bump the version in two places: `Version:` in `style.css` and `AARDLING_THEME_VERSION` in `functions.php`. Add a `## x.y.z` section to `CHANGELOG.md`.
