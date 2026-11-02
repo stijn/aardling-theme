@@ -538,9 +538,11 @@ add_action( 'wp_head', function () {
 		// The medium file at its own size, above the post (above Trending's number too); scaled down,
 		// never up, only where a column is narrower. One column (phones): beside the title at half
 		// width, which is pixel for pixel on their double-density screens. Beside it go two lines (date
-		// or number, then title); the empty third row takes up the rest of the image's height.
+		// or number, then title); the empty third row takes up the rest of the image's height. Less box
+		// padding and slightly smaller titles there, so a title gets about 170 px beside its image.
 		. '.aardling-reads__thumb{order:-1;display:block;max-width:100%;height:auto;margin:0 0 .75rem;border-radius:10px}'
-		. '@media (max-width:599px){.aardling-reads__item--thumb{display:grid;grid-template-columns:100px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:1rem;align-items:start}'
+		. '@media (max-width:599px){.aardling-reads__box{padding-left:1rem;padding-right:1rem}.aardling-reads__title{font-size:1.05em}'
+		. '.aardling-reads__item--thumb{display:grid;grid-template-columns:100px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:.75rem;align-items:start}'
 		. '.aardling-reads__item--thumb>*,.aardling-reads__item--thumb::before{grid-column:2}'
 		. '.aardling-reads__item--thumb>.aardling-reads__thumb{grid-column:1;grid-row:1/span 3;width:100px;margin:0;border-radius:6px}}'
 		. '.aardling-reads__box--trending{--aardling-reads-bg:var(--aardling-reads-hot-bg);--aardling-reads-line:var(--aardling-reads-hot-line)}'

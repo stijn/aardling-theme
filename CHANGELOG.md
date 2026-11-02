@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.4
+- Reading boxes on phones: less box padding, slightly smaller titles and a narrower gap beside the image, so titles get about 170 px instead of 140 and wrap into fewer lines.
+
 ## 1.4.3
 - Comments are now closed in the database too, once, right after this version arrives: every post, page and attachment (1,005 posts and one page still had comments open, 1,741 posts pings), and the defaults for new posts. The update goes straight to the table, so no post's modified date changes and no cache needs clearing. The theme keeps closing them as before.
 - Every post in the reading boxes has its image now, not just the first recent one: the medium file at its own size, above the title, lazy-loaded. On phones the image sits beside the title at half width, pixel for pixel on double-density screens. Posts without a featured image stay text only.

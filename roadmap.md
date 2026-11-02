@@ -5,6 +5,9 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.4.4 (2026-11-02)
+- Roomier reading boxes on phones, so titles beside their image wrap into fewer lines.
+
 ## 1.4.3 (2026-11-02)
 - Comments and pings closed once in the database too (posts, pages, attachments, defaults for new posts), without touching modified dates.
 - An image for every post in the reading boxes, at the medium size's own dimensions, lazy-loaded; beside the title on phones.
