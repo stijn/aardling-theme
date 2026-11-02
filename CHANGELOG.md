@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+- Previous and next arrows at the sides of each post, on screens from 1024 px wide, after McSweeney's: a thin < at the left edge leads to the older post, a > at the right edge to the newer one. Pointing at an arrow, or tabbing to it, opens a card with the post's title and its image (the medium size, 200 px, as in the reading boxes). The card stays hidden until then and the image is lazy-loaded, so it downloads only when someone points at the arrow. No script; colours follow Deluminator's dark mode. Twenty Nineteen's links under the post stay (`inc/nav.php`).
+- Publishing, changing or unpublishing a post now also clears the cached pages of the posts before and after it, in WP Super Cache and at Cloudflare, so their arrows and Twenty Nineteen's links show the right post, title and image.
+- Switches on Appearance > Aardling, under "Images and arrows": images in the reading boxes, the arrows, and images in the arrows. All on until switched off. Saving a change empties WP Super Cache and Cloudflare's cache, so every post shows it straight away (`inc/switches.php`).
+- The release workflow lints every PHP file in `inc/`.
+
 ## 1.4.5
 - Reading box images show at their full 200 px on laptop screens too. Four columns now start at 1,536 px instead of 1,168, so the three columns behind the dividers are never narrower than the image (they were down to 131 px); in between, two columns. Just above 768 px (an upright older iPad) the boxes use slightly less padding and gap for the same reason.
 

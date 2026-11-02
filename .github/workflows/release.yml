@@ -39,13 +39,7 @@ jobs:
       - name: Lint PHP
         if: steps.exists.outputs.skip == 'false'
         run: |
-          php -l functions.php
-          php -l inc/updater.php
-          php -l inc/cloudflare.php
-          php -l inc/customizer.php
-          php -l inc/analytics.php
-          php -l inc/reads.php
-          php -l inc/comments.php
+          for f in functions.php inc/*.php; do php -l "$f"; done
       - name: Build zip
         if: steps.exists.outputs.skip == 'false'
         run: |

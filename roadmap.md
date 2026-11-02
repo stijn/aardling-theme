@@ -5,6 +5,11 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.5.0 (2026-11-02)
+- Previous and next arrows at the sides of each post, with a title card and a lazy-loaded image on hover.
+- Switches for images in the reading boxes, the arrows and images in the arrows.
+- Neighbouring posts' cached pages cleared when a post changes.
+
 ## 1.4.5 (2026-11-02)
 - Reading box images at their full 200 px on every screen from 600 px: four columns from 1,536 px.
 

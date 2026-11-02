@@ -11,6 +11,8 @@
  *   /aardling-reads.json, which Cloudflare caches too and the theme clears whenever the lists
  *   change. Without JavaScript the two boxes stay hidden.
  * - Recently is rebuilt when a post is published, updated or unpublished.
+ * - Each post shows its image while that switch is on (Appearance > Aardling, see
+ *   inc/switches.php). The JSON file always carries the images; the page tells the script.
  * - Trending is rebuilt every hour from Cloudflare's GraphQL Analytics API: the most-loaded pages
  *   of the last 7 days, matched to published posts. It needs the account ID, the Web Analytics
  *   site tag and a token with only Account > Account Analytics > Read, from
@@ -86,16 +88,19 @@ function aardling_theme_reads_trending_item( WP_Post $post ) : array {
 }
 
 /**
- * The thumbnail tag for a Suggested post, like the one the script builds for the other boxes.
+ * The thumbnail tag for a Suggested post, like the one the script builds for the other boxes, or
+ * for an arrow's card (inc/nav.php).
  *
- * @param array $item From aardling_theme_reads_item() with $thumb.
+ * @param array  $item  From aardling_theme_reads_item() with $thumb.
+ * @param string $class Class of the img.
  */
-function aardling_theme_reads_thumb_html( array $item ) : string {
+function aardling_theme_reads_thumb_html( array $item, string $class = 'aardling-reads__thumb' ) : string {
 	if ( empty( $item['thumb'] ) ) {
 		return '';
 	}
 	return sprintf(
-		'<img class="aardling-reads__thumb" src="%s" width="%d" height="%d" alt="" loading="lazy" decoding="async">',
+		'<img class="%s" src="%s" width="%d" height="%d" alt="" loading="lazy" decoding="async">',
+		esc_attr( $class ),
 		esc_url( $item['thumb'] ),
 		(int) $item['thumb_w'],
 		(int) $item['thumb_h']
@@ -433,7 +438,7 @@ function aardling_theme_reads_box( string $list, array $posts = array() ) : stri
 	$items  = '';
 
 	foreach ( $posts as $post ) {
-		$item   = aardling_theme_reads_item( $post, true );
+		$item   = aardling_theme_reads_item( $post, aardling_theme_switch( 'reads_thumbs' ) );
 		$thumb  = aardling_theme_reads_thumb_html( $item );
 		$items .= sprintf(
 			'<li class="aardling-reads__item%s">%s<time class="aardling-reads__date" datetime="%s">%s</time><a class="aardling-reads__title" href="%s">%s</a></li>',
@@ -473,10 +478,11 @@ function aardling_theme_reads_render() : void {
 
 	$related = aardling_theme_reads_related( $post );
 	printf(
-		'<section class="aardling-reads" aria-label="%s" data-post="%d" data-src="%s">%s%s%s</section>' . "\n",
+		'<section class="aardling-reads" aria-label="%s" data-post="%d" data-src="%s"%s>%s%s%s</section>' . "\n",
 		esc_attr( aardling_theme_reads_labels()['section'] ),
 		(int) $post->ID,
 		esc_url( home_url( AARDLING_THEME_READS_PATH ) ),
+		aardling_theme_switch( 'reads_thumbs' ) ? ' data-thumbs' : '',
 		$related ? aardling_theme_reads_box( 'related', $related ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the box.
 		aardling_theme_reads_box( 'trending' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		aardling_theme_reads_box( 'recent' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -495,16 +501,16 @@ add_action( 'get_footer', 'aardling_theme_reads_render', 10 );
 
 /**
  * Fills Trending (at least 3 posts) and Recently (at least 1) from the JSON file, leaving out the
- * post being read; each post with its image. Text goes in as text.
+ * post being read; each post with its image when the section has data-thumbs. Text goes in as text.
  */
 function aardling_theme_reads_script() : string {
 	return <<<'JS'
-(function(){var s=document.querySelector('.aardling-reads');if(!s||!window.fetch){return;}var cur=parseInt(s.getAttribute('data-post'),10);
+(function(){var s=document.querySelector('.aardling-reads');if(!s||!window.fetch){return;}var cur=parseInt(s.getAttribute('data-post'),10),th=s.hasAttribute('data-thumbs');
 fetch(s.getAttribute('data-src'),{cache:'no-cache',credentials:'omit'}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(!d){return;}
 [['trending',3],['recent',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
 var items=(d[k[0]]||[]).filter(function(p){return p&&p.id!==cur&&/^https?:\/\//.test(p.url||'');}).slice(0,4);if(!list||items.length<k[1]){return;}
 items.forEach(function(p){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
-if(p.thumb){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);li.className+=' aardling-reads__item--thumb';}
+if(th&&p.thumb){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);li.className+=' aardling-reads__item--thumb';}
 if(p.date){var t=document.createElement('time');t.className='aardling-reads__date';t.dateTime=p.iso||'';t.textContent=p.date;li.appendChild(t);}
 a.className='aardling-reads__title';a.href=p.url;a.textContent=p.title||'';li.appendChild(a);list.appendChild(li);});box.hidden=false;});}).catch(function(){});})();
 JS;
