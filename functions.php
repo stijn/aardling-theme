@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.5.0' );
+define( 'AARDLING_THEME_VERSION', '1.5.1' );
 
 require_once __DIR__ . '/inc/updater.php';
 require_once __DIR__ . '/inc/cloudflare.php';

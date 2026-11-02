@@ -5,6 +5,9 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.5.1 (2026-11-02)
+- Arrows visible over header photos; no hyphenation in their title card.
+
 ## 1.5.0 (2026-11-02)
 - Previous and next arrows at the sides of each post, with a title card and a lazy-loaded image on hover.
 - Switches for images in the reading boxes, the arrows and images in the arrows.

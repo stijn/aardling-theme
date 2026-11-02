@@ -103,13 +103,14 @@ add_action( 'wp_head', function () {
 		return;
 	}
 	$sans = '-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue",sans-serif';
-	$css  = '.aardling-nav{--aardling-nav-bg:#fff;--aardling-nav-line:#e6e6e6;--aardling-nav-muted:#767676;--aardling-nav-text:#111;display:none}'
+	$css  = '.aardling-nav{--aardling-nav-bg:#fff;--aardling-nav-line:#e6e6e6;--aardling-nav-muted:#767676;--aardling-nav-text:#111;display:none;hyphens:manual}'
 		. 'html.deluminator-palette.deluminator-dark .aardling-nav{--aardling-nav-bg:var(--dl-surface);--aardling-nav-line:var(--dl-line);--aardling-nav-muted:var(--dl-muted);--aardling-nav-text:var(--dl-text)}'
 		. '@media screen and (min-width:1024px){.aardling-nav{display:block}}'
 		. '.aardling-nav__link{position:fixed;z-index:10;top:50%;display:flex;align-items:center;height:80px;margin-top:-40px;padding:0 10px;text-decoration:none}'
 		. '.aardling-nav__link--prev{left:0}'
 		. '.aardling-nav__link--next{right:0;flex-direction:row-reverse}'
-		. '.aardling-nav__arrow{flex:none;color:var(--aardling-nav-muted);transition:color .15s}'
+		// A halo in the page colour: unseen on the page, it keeps the arrow visible over a header photo.
+		. '.aardling-nav__arrow{flex:none;color:var(--aardling-nav-muted);transition:color .15s;filter:drop-shadow(0 0 1px var(--aardling-nav-bg)) drop-shadow(0 0 3px var(--aardling-nav-bg))}'
 		. '.aardling-nav__arrow path{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}'
 		. '.aardling-nav__link:hover .aardling-nav__arrow,.aardling-nav__link:focus .aardling-nav__arrow{color:var(--aardling-nav-text)}'
 		// The card: 200 px inside, the medium image's own width. Taller cards stick out of the link

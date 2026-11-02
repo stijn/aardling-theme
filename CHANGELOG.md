@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+- The arrows get a soft halo in the page colour, so they stay visible over a post's header photo; on the page itself it doesn't show.
+- No hyphenation inside words in the arrows' title card, as in the reading boxes.
+
 ## 1.5.0
 - Previous and next arrows at the sides of each post, on screens from 1024 px wide, after McSweeney's: a thin < at the left edge leads to the older post, a > at the right edge to the newer one. Pointing at an arrow, or tabbing to it, opens a card with the post's title and its image (the medium size, 200 px, as in the reading boxes). The card stays hidden until then and the image is lazy-loaded, so it downloads only when someone points at the arrow. No script; colours follow Deluminator's dark mode. Twenty Nineteen's links under the post stay (`inc/nav.php`).
 - Publishing, changing or unpublishing a post now also clears the cached pages of the posts before and after it, in WP Super Cache and at Cloudflare, so their arrows and Twenty Nineteen's links show the right post, title and image.
