@@ -6,6 +6,7 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 - Drops Font Awesome, which WP Mobile Bottom Menu loads on every page, and draws the bottom menu's three icons (home, compass, user; solid and outline) as inline SVG masks.
 - Loads Twenty Nineteen's stylesheet under its own handle, so the child theme adds no request.
 - On first activation, copies Twenty Nineteen's Customizer settings so the site looks the same.
+- Twenty Nineteen options in Appearance > Customize > Aardling (`inc/customizer.php`): everything Options for Twenty Nineteen offers, free and premium, with the same setting names so saved values carry over. Off while that plugin is active.
 - Stops Rank Math from emptying the whole WP Super Cache whenever its sitemap changes.
 - Clears changed pages from Cloudflare's cache (see below), so a Cloudflare Cache Rule can keep the pages at the edge without APO.
 
@@ -32,6 +33,7 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 ## License and credits
 - Aardling is free software under the GNU General Public License v2 or later; see [LICENSE](LICENSE). That's the same licence as WordPress and Twenty Nineteen.
 - Parent theme: [Twenty Nineteen](https://wordpress.org/themes/twentynineteen/) by the WordPress team, GPL v2 or later. This theme only loads it; no Twenty Nineteen files are copied here.
+- The Twenty Nineteen options follow the feature list of [Options for Twenty Nineteen](https://wordpress.org/plugins/options-for-twenty-nineteen/) by Webd Ltd (GPL v2 or later) and reuse its setting names so saved values carry over. The code is written for this theme; none of the plugin's files are included.
 - Vendored: [plugin-update-checker](https://github.com/YahnisElsts/plugin-update-checker) 5.6 by Jānis Elsts, MIT licence (`vendor/plugin-update-checker/license.txt`), compatible with the GPL.
 - The bottom menu icons are original SVG drawings made for this theme. No Font Awesome files or artwork are included; the CSS only targets the class names WP Mobile Bottom Menu prints.
 - WordPress is a trademark of the WordPress Foundation. This theme is not affiliated with or endorsed by it, and doesn't use the name in its own.

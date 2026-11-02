@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+- Appearance > Customize > Aardling: every option the plugin Options for Twenty Nineteen offers, free and premium, in the theme. Font sizes (also for mobile and tablet), dashes, logo size, background, circle and position, title and description alignment or hiding, a scroll-to-content arrow, menu font sizes, title weight and case, where the date and author show, hiding dates, authors, featured images or titles, category and tag descriptions, full posts in archives, Rank Math or Yoast breadcrumbs, Jetpack infinite scroll, footer colour, removing or replacing the "Proudly powered by WordPress" credit, background and primary colour (hex), overlay opacity and colour levels.
+- The plugin's options keep their setting names, so the values saved now carry over. The options stay off while the plugin is active; deactivate it and the theme takes over.
+- No scripts: the credit and its comma are removed on the server instead of with JavaScript. Jetpack's Featured Content isn't included (no Jetpack on the site).
+
 ## 1.2.0
 - Clears pages from Cloudflare's cache when they change, so a Cache Rule can keep pages at the edge for a month without APO. A post that's published, edited, unpublished, retagged or gets an approved comment clears its own page, the homepage, its term, author and year archives and the feeds. Menus, widgets, the Customizer, the site title, theme updates and a full WP Super Cache clear clear the whole site.
 - One Cloudflare call for URLs and one for paths per request, 100 items each; more than 300 items (a bulk edit) becomes one purge of everything.
