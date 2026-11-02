@@ -1,16 +1,20 @@
 <?php
 /**
  * Reading boxes under each post: Suggested (related posts), Trending (most read this week, from
- * Cloudflare Web Analytics) and Recently (the newest posts).
+ * Cloudflare Web Analytics), Recently (the newest posts) and On this day (posts from this date in
+ * earlier years).
  *
  * How it works:
  * - Suggested is part of the page: the posts that share the most tags, then posts from the same
  *   category.
- * - Trending and Recently change more often than Cloudflare's cached copy of a page (up to a
- *   month), so the page only carries their empty boxes. A few lines of script fill them from
- *   /aardling-reads.json, which Cloudflare caches too and the theme clears whenever the lists
- *   change. Without JavaScript the two boxes stay hidden.
+ * - Trending, Recently and On this day change more often than Cloudflare's cached copy of a page
+ *   (up to a month), so the page only carries their empty boxes. A few lines of script fill them
+ *   from /aardling-reads.json, which Cloudflare caches too and the theme clears whenever the lists
+ *   change. Without JavaScript these boxes stay hidden.
  * - Recently is rebuilt when a post is published, updated or unpublished.
+ * - On this day is rebuilt then too, and when the day turns in the site's timezone: an hourly
+ *   check, on the hour, or the JSON file if it's asked first. One post per earlier year, newest
+ *   year first. The box has its own switch on Appearance > Aardling.
  * - Each post shows its image while that switch is on (Appearance > Aardling, see
  *   inc/switches.php). The JSON file always carries the images; the page tells the script.
  * - Trending is rebuilt every hour from Cloudflare's GraphQL Analytics API: the most-loaded pages
@@ -32,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const AARDLING_THEME_READS_PATH    = '/aardling-reads.json';
 const AARDLING_THEME_READS_DAYS    = 7;
 const AARDLING_THEME_READS_GRAPHQL = 'https://api.cloudflare.com/client/v4/graphql';
-const AARDLING_THEME_READS_FORMAT  = 4; // Bump when the stored items change shape; both lists are then rebuilt.
+const AARDLING_THEME_READS_FORMAT  = 5; // Bump when the stored items change shape; both lists are then rebuilt.
 
 /**
  * Box titles, in the site's language. Filter: aardling_theme_reads_labels.
@@ -43,10 +47,11 @@ function aardling_theme_reads_labels() : array {
 	return (array) apply_filters(
 		'aardling_theme_reads_labels',
 		array(
-			'section'  => $nl ? 'Meer om te lezen' : 'More to read',
-			'related'  => $nl ? 'Leestips' : 'Suggested reads',
-			'trending' => $nl ? 'Populair' : 'Trending',
-			'recent'   => $nl ? 'Recent' : 'Recently',
+			'section'   => $nl ? 'Meer om te lezen' : 'More to read',
+			'related'   => $nl ? 'Leestips' : 'Suggested reads',
+			'trending'  => $nl ? 'Populair' : 'Trending',
+			'recent'    => $nl ? 'Recent' : 'Recently',
+			'onthisday' => $nl ? 'Op deze dag' : 'On this day',
 		)
 	);
 }
@@ -194,6 +199,63 @@ function aardling_theme_reads_recent() : array {
 }
 
 /**
+ * Posts from today's date in earlier years, in the site's timezone: one per year (the last one
+ * that day), newest year first, five at most (one more than a box shows, so the post being read
+ * can be left out). Their date line gives the year and how long ago it was.
+ */
+function aardling_theme_reads_onthisday() : array {
+	$today = current_datetime();
+	$nl    = 0 === strpos( get_locale(), 'nl' );
+	$posts = aardling_theme_reads_posts(
+		array(
+			'numberposts' => 50,
+			'date_query'  => array(
+				array( 'month' => (int) $today->format( 'n' ), 'day' => (int) $today->format( 'j' ) ),
+				array( 'year' => (int) $today->format( 'Y' ), 'compare' => '<' ),
+			),
+			'orderby'     => 'date',
+			'order'       => 'DESC',
+		)
+	);
+
+	$items = array();
+	foreach ( $posts as $post ) {
+		$year = (int) get_the_date( 'Y', $post );
+		if ( isset( $items[ $year ] ) ) {
+			continue;
+		}
+		$ago            = (int) $today->format( 'Y' ) - $year;
+		$items[ $year ] = array_merge(
+			aardling_theme_reads_item( $post, true ),
+			array( 'date' => $year . ' · ' . ( $nl ? $ago . ' jaar geleden' : $ago . ( 1 === $ago ? ' year ago' : ' years ago' ) ) )
+		);
+		if ( 5 === count( $items ) ) {
+			break;
+		}
+	}
+	return array_values( $items );
+}
+
+/**
+ * On this day for today, as changes for aardling_theme_reads_save().
+ */
+function aardling_theme_reads_onthisday_changes() : array {
+	return array(
+		'onthisday'     => aardling_theme_reads_onthisday(),
+		'onthisday_day' => wp_date( 'Y-m-d' ),
+	);
+}
+
+/**
+ * Rebuild On this day once the day has turned.
+ */
+function aardling_theme_reads_refresh_day() : void {
+	if ( wp_date( 'Y-m-d' ) !== aardling_theme_reads_data()['onthisday_day'] ) {
+		aardling_theme_reads_save( aardling_theme_reads_onthisday_changes() );
+	}
+}
+
+/**
  * The stored lists and Trending's status.
  */
 function aardling_theme_reads_data() : array {
@@ -203,6 +265,8 @@ function aardling_theme_reads_data() : array {
 		'trending_time'    => 0,
 		'trending_ok_time' => 0,
 		'trending_error'   => '',
+		'onthisday'        => array(),
+		'onthisday_day'    => '',
 		'format'           => 0,
 	);
 	$data     = get_option( 'aardling_theme_reads', array() );
@@ -220,7 +284,7 @@ function aardling_theme_reads_save( array $changes ) : void {
 	$after  = array_merge( $before, $changes );
 	update_option( 'aardling_theme_reads', $after, false );
 
-	if ( $before['recent'] !== $after['recent'] || $before['trending'] !== $after['trending'] ) {
+	if ( $before['recent'] !== $after['recent'] || $before['trending'] !== $after['trending'] || $before['onthisday'] !== $after['onthisday'] ) {
 		aardling_theme_cloudflare_queue_url( home_url( AARDLING_THEME_READS_PATH ) );
 	}
 }
@@ -371,12 +435,22 @@ add_action( 'init', function () {
 		wp_schedule_event( time() + MINUTE_IN_SECONDS, 'hourly', 'aardling_theme_reads_trending' );
 	}
 } );
+add_action( 'aardling_theme_reads_day', 'aardling_theme_reads_refresh_day' );
+
+add_action( 'init', function () {
+	if ( ! wp_next_scheduled( 'aardling_theme_reads_day' ) ) {
+		// On the hour (half a minute past), so a new day's list follows midnight as soon as cron runs.
+		wp_schedule_event( ( intdiv( time(), HOUR_IN_SECONDS ) + 1 ) * HOUR_IN_SECONDS + 30, 'hourly', 'aardling_theme_reads_day' );
+	}
+} );
 add_action( 'switch_theme', function () {
 	wp_clear_scheduled_hook( 'aardling_theme_reads_trending' );
+	wp_clear_scheduled_hook( 'aardling_theme_reads_day' );
 } );
 
-// Recently: rebuilt at the end of any request that published, changed or unpublished a post, after
-// its featured image and terms are saved too, and before the Cloudflare purge goes out.
+// Recently and On this day: rebuilt at the end of any request that published, changed or
+// unpublished a post, after its featured image and terms are saved too, and before the Cloudflare
+// purge goes out.
 add_action( 'transition_post_status', function ( $new_status, $old_status, $post ) {
 	if ( $post instanceof WP_Post && 'post' === $post->post_type && ( 'publish' === $new_status || 'publish' === $old_status ) ) {
 		$GLOBALS['aardling_theme_reads_recent_changed'] = true;
@@ -385,11 +459,11 @@ add_action( 'transition_post_status', function ( $new_status, $old_status, $post
 add_action( 'shutdown', function () {
 	if ( ! empty( $GLOBALS['aardling_theme_reads_recent_changed'] ) ) {
 		$GLOBALS['aardling_theme_reads_recent_changed'] = false;
-		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent() ) );
+		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent() ) + aardling_theme_reads_onthisday_changes() );
 	}
 }, 0 );
 
-// /aardling-reads.json: Recently and Trending for the script. Cloudflare's page rule caches it like a
+// /aardling-reads.json: Recently, Trending and On this day for the script. Cloudflare's page rule caches it like a
 // page; browsers check back each time (no-cache), so a cleared list shows up straight away.
 add_action( 'init', function () {
 	$path = (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
@@ -406,13 +480,15 @@ add_action( 'init', function () {
 				$trending[] = aardling_theme_reads_trending_item( $post );
 			}
 		}
-		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent(), 'trending' => $trending, 'format' => AARDLING_THEME_READS_FORMAT ) );
-		$data = aardling_theme_reads_data();
+		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent(), 'trending' => $trending, 'format' => AARDLING_THEME_READS_FORMAT ) + aardling_theme_reads_onthisday_changes() );
 	}
+	aardling_theme_reads_refresh_day();
+	$data = aardling_theme_reads_data();
 	$body = (string) wp_json_encode(
 		array(
-			'recent'   => $data['recent'],
-			'trending' => $data['trending'],
+			'recent'    => $data['recent'],
+			'trending'  => $data['trending'],
+			'onthisday' => $data['onthisday'],
 		),
 		JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
 	);
@@ -427,9 +503,9 @@ add_action( 'init', function () {
 }, 0 );
 
 /**
- * One box. Suggested arrives with its posts; Trending and Recently arrive empty and hidden.
+ * One box. Suggested arrives with its posts; the others arrive empty and hidden.
  *
- * @param string    $list  'related', 'trending' or 'recent'.
+ * @param string    $list  'related', 'trending', 'recent' or 'onthisday'.
  * @param WP_Post[] $posts Posts to show now.
  */
 function aardling_theme_reads_box( string $list, array $posts = array() ) : string {
@@ -462,7 +538,7 @@ function aardling_theme_reads_box( string $list, array $posts = array() ) : stri
 }
 
 /**
- * Print the three boxes once per page: before the comments when the post has any (Twenty
+ * Print the boxes once per page: before the comments when the post has any (Twenty
  * Nineteen's single.php loads them right after the post navigation), otherwise before the footer.
  */
 function aardling_theme_reads_render() : void {
@@ -478,14 +554,15 @@ function aardling_theme_reads_render() : void {
 
 	$related = aardling_theme_reads_related( $post );
 	printf(
-		'<section class="aardling-reads" aria-label="%s" data-post="%d" data-src="%s"%s>%s%s%s</section>' . "\n",
+		'<section class="aardling-reads" aria-label="%s" data-post="%d" data-src="%s"%s>%s%s%s%s</section>' . "\n",
 		esc_attr( aardling_theme_reads_labels()['section'] ),
 		(int) $post->ID,
 		esc_url( home_url( AARDLING_THEME_READS_PATH ) ),
 		aardling_theme_switch( 'reads_thumbs' ) ? ' data-thumbs' : '',
 		$related ? aardling_theme_reads_box( 'related', $related ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the box.
 		aardling_theme_reads_box( 'trending' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		aardling_theme_reads_box( 'recent' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		aardling_theme_reads_box( 'recent' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		aardling_theme_switch( 'reads_onthisday' ) ? aardling_theme_reads_box( 'onthisday' ) : '' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	);
 	// noptimize: Autoptimize leaves it where it is, right after the boxes it fills.
 	echo '<!--noptimize--><script>' . aardling_theme_reads_script() . '</script><!--/noptimize-->' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -500,14 +577,14 @@ add_filter( 'comments_template', function ( $file ) {
 add_action( 'get_footer', 'aardling_theme_reads_render', 10 );
 
 /**
- * Fills Trending (at least 3 posts) and Recently (at least 1) from the JSON file, leaving out the
- * post being read; each post with its image when the section has data-thumbs. Text goes in as text.
+ * Fills Trending (at least 3 posts), Recently and On this day (at least 1) from the JSON file,
+ * leaving out the post being read; each post with its image when the section has data-thumbs. Text goes in as text.
  */
 function aardling_theme_reads_script() : string {
 	return <<<'JS'
 (function(){var s=document.querySelector('.aardling-reads');if(!s||!window.fetch){return;}var cur=parseInt(s.getAttribute('data-post'),10),th=s.hasAttribute('data-thumbs');
 fetch(s.getAttribute('data-src'),{cache:'no-cache',credentials:'omit'}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(!d){return;}
-[['trending',3],['recent',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
+[['trending',3],['recent',1],['onthisday',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
 var items=(d[k[0]]||[]).filter(function(p){return p&&p.id!==cur&&/^https?:\/\//.test(p.url||'');}).slice(0,4);if(!list||items.length<k[1]){return;}
 items.forEach(function(p){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
 if(th&&p.thumb){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);li.className+=' aardling-reads__item--thumb';}
@@ -611,7 +688,7 @@ add_action( 'admin_post_aardling_theme_reads_refresh', function () {
 		wp_die( 'This user may not change site settings.' );
 	}
 	check_admin_referer( 'aardling_theme_reads_refresh' );
-	aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent() ) );
+	aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent() ) + aardling_theme_reads_onthisday_changes() );
 	aardling_theme_reads_refresh_trending();
 	wp_safe_redirect( admin_url( 'themes.php?page=aardling-theme' ) );
 	exit;
@@ -625,8 +702,9 @@ add_action( 'aardling_theme_settings_page', function () {
 	);
 	?>
 	<h2>Reading boxes</h2>
-	<p>Under each post: Suggested (related posts), Trending (most read in the last <?php echo (int) AARDLING_THEME_READS_DAYS; ?> days, from Cloudflare Web Analytics) and Recently.</p>
+	<p>Under each post: Suggested (related posts), Trending (most read in the last <?php echo (int) AARDLING_THEME_READS_DAYS; ?> days, from Cloudflare Web Analytics), Recently and On this day.</p>
 	<p>Recently: <?php echo esc_html( count( $data['recent'] ) . ' posts.' ); ?>
+		On this day: <?php echo esc_html( count( $data['onthisday'] ) . ' posts' . ( '' !== $data['onthisday_day'] ? ' for ' . $data['onthisday_day'] : '' ) . '.' ); ?>
 		Trending: <?php
 		if ( ! aardling_theme_reads_trending_configured() ) {
 			echo esc_html( 'off until the account ID, site tag and token are set.' );
@@ -672,7 +750,7 @@ add_action( 'aardling_theme_settings_page', function () {
 	<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
 		<input type="hidden" name="action" value="aardling_theme_reads_refresh">
 		<?php wp_nonce_field( 'aardling_theme_reads_refresh' ); ?>
-		<?php submit_button( 'Refresh Recently and Trending now', 'secondary', 'submit', false ); ?>
+		<?php submit_button( 'Refresh Recently, Trending and On this day now', 'secondary', 'submit', false ); ?>
 	</form>
 	<?php
 } );

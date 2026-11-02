@@ -3,8 +3,9 @@
  * On/off switches for what the theme shows, on Appearance > Aardling.
  *
  * How it works:
- * - Each switch is an option that is on until it's switched off: images in the reading boxes
- *   (inc/reads.php), the previous and next arrows, and images in the arrows (inc/nav.php).
+ * - Each switch is an option that is on until it's switched off: images in the reading boxes and
+ *   the On this day box (inc/reads.php), the previous and next arrows, images in the arrows and
+ *   instant loading (inc/nav.php), and the contents list (inc/toc.php).
  * - Every cached post page carries the old markup, so a change empties WP Super Cache and clears
  *   the whole site at Cloudflare.
  *
@@ -20,9 +21,12 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function aardling_theme_switches() : array {
 	return array(
-		'reads_thumbs' => 'Images in the reading boxes',
-		'nav_arrows'   => 'Previous and next arrows at the sides of each post, on screens from 1024 px wide',
-		'nav_thumbs'   => 'Images in the arrows\' title card',
+		'reads_thumbs'    => 'Images in the reading boxes',
+		'reads_onthisday' => 'The On this day box: posts from this date in earlier years',
+		'nav_arrows'      => 'Previous and next arrows at the sides of each post, on screens from 1024 px wide',
+		'nav_thumbs'      => 'Images in the arrows\' title card',
+		'instant'         => 'Instant next post: fetch a post as soon as someone points at a link to it',
+		'toc'             => 'A contents list in posts with three or more headings',
 	);
 }
 

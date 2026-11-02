@@ -5,6 +5,11 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.6.0 (2026-11-02)
+- On this day reading box.
+- Contents list for posts with three or more headings.
+- Instant next post (speculative loading on hover).
+
 ## 1.5.1 (2026-11-02)
 - Arrows visible over header photos; no hyphenation in their title card.
 

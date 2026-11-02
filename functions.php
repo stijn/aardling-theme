@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.5.1' );
+define( 'AARDLING_THEME_VERSION', '1.6.0' );
 
 require_once __DIR__ . '/inc/updater.php';
 require_once __DIR__ . '/inc/cloudflare.php';
@@ -14,6 +14,7 @@ require_once __DIR__ . '/inc/analytics.php';
 require_once __DIR__ . '/inc/switches.php';
 require_once __DIR__ . '/inc/reads.php';
 require_once __DIR__ . '/inc/nav.php';
+require_once __DIR__ . '/inc/toc.php';
 require_once __DIR__ . '/inc/comments.php';
 
 /**

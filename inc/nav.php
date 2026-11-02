@@ -1,6 +1,7 @@
 <?php
 /**
- * Previous and next arrows at the sides of each post, on screens from 1024 px wide.
+ * Previous and next arrows at the sides of each post, on screens from 1024 px wide, and instant
+ * loading of the next post.
  *
  * How it works:
  * - A thin < at the left edge leads to the older post, a > at the right edge to the newer one.
@@ -9,6 +10,10 @@
  * - The card is display:none until then and its image is loading="lazy", so the image downloads
  *   only when someone points at the arrow. No script.
  * - Twenty Nineteen's links under the post stay, for narrower screens.
+ * - Instant next post: WordPress fetches a page in the background as a visitor presses a link
+ *   (speculative loading, logged-out visitors only). With that switch on it starts when the pointer
+ *   rests on a link, so the page is usually there before the click. Prefetch, not prerender: a
+ *   prerendered page could count in the analytics for a page nobody looked at.
  * - The posts beside a changed post show its title and image, in the arrows and in Twenty
  *   Nineteen's links, so their cached pages are cleared too (WP Super Cache and Cloudflare): the
  *   ones beside it before the change, as a new date moves it away, and after it.
@@ -124,6 +129,14 @@ add_action( 'wp_head', function () {
 
 	echo '<style id="aardling-nav-css">' . $css . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed CSS.
 }, 100 );
+
+add_filter( 'wp_speculation_rules_configuration', function ( $config ) {
+	if ( is_array( $config ) && aardling_theme_switch( 'instant' ) ) {
+		$config['mode']      = 'prefetch';
+		$config['eagerness'] = 'moderate';
+	}
+	return $config;
+} );
 
 // The neighbours' cached pages: before a change to a published post, and at the end of any request
 // that published, changed or unpublished one (after its featured image is saved), before the

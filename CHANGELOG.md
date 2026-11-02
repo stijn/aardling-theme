@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0
+- On this day: a fourth reading box with posts from today's date in earlier years, one per year, newest year first, each with its year and how long ago ("2012 · 14 jaar geleden"). It fills from `/aardling-reads.json` like Trending and Recently, and is rebuilt when the day turns (an hourly check on the hour, in the site's timezone) and whenever a post changes. On 360 days of the year at least one earlier year has a post.
+- Contents list for long posts: posts with three or more h2 headings get a list of them (with their h3s) right before the first heading, in a box readers can fold shut. Made with the page, no script; headings without an id get one (`inc/toc.php`).
+- Instant next post: WordPress's speculative loading now fetches a post as soon as the pointer rests on a link to it (moderate eagerness) instead of when the link is pressed. Prefetch only, so the analytics never count a page nobody opened.
+- Each has a switch on Appearance > Aardling, on until switched off.
+
 ## 1.5.1
 - The arrows get a soft halo in the page colour, so they stay visible over a post's header photo; on the page itself it doesn't show.
 - No hyphenation inside words in the arrows' title card, as in the reading boxes.
