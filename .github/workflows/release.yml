@@ -41,6 +41,7 @@ jobs:
         run: |
           php -l functions.php
           php -l inc/updater.php
+          php -l inc/cloudflare.php
       - name: Build zip
         if: steps.exists.outputs.skip == 'false'
         run: |

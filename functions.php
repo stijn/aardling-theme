@@ -5,9 +5,10 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.1.2' );
+define( 'AARDLING_THEME_VERSION', '1.2.0' );
 
 require_once __DIR__ . '/inc/updater.php';
+require_once __DIR__ . '/inc/cloudflare.php';
 
 /**
  * Twenty Nineteen enqueues get_stylesheet_uri() as 'twentynineteen-style'.

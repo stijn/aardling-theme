@@ -152,6 +152,7 @@ add_action( 'admin_menu', function () {
 				<?php wp_nonce_field( 'aardling_theme_check_updates' ); ?>
 				<?php submit_button( 'Check for updates now', 'secondary', 'submit', false ); ?>
 			</form>
+			<?php do_action( 'aardling_theme_settings_page' ); ?>
 		</div>
 		<?php
 	} );

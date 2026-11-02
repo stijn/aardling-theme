@@ -6,6 +6,14 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 - Drops Font Awesome, which WP Mobile Bottom Menu loads on every page, and draws the bottom menu's three icons (home, compass, user; solid and outline) as inline SVG masks.
 - Loads Twenty Nineteen's stylesheet under its own handle, so the child theme adds no request.
 - On first activation, copies Twenty Nineteen's Customizer settings so the site looks the same.
+- Stops Rank Math from emptying the whole WP Super Cache whenever its sitemap changes.
+- Clears changed pages from Cloudflare's cache (see below), so a Cloudflare Cache Rule can keep the pages at the edge without APO.
+
+## Cloudflare cache purge
+- Needs the zone ID (Cloudflare > aardling.com > Overview, API box) and an API token with only Zone > Cache Purge > Purge for aardling.com. Enter both on Appearance > Aardling, or `define( 'AARDLING_THEME_CLOUDFLARE_ZONE', '...' );` and `define( 'AARDLING_THEME_CLOUDFLARE_TOKEN', '...' );` in wp-config.php. Without both, nothing is sent.
+- A post change clears the post's path, the homepage and its feed, `/page/`, and the post's term, author and year archives (prefixes, so their `/page/N/` and `/feed/` go too). Site-wide changes purge everything.
+- Sent once at the end of the request; more than 300 items becomes a purge of everything. Free plan limits: 5 prefix or everything calls a minute (bursts of 25), 800 URLs a second.
+- "Test: clear the homepage" checks the zone ID and token; the page shows the last purge and any Cloudflare error.
 
 ## Release flow (fully automated)
 1. Change code, bump the version in two places: `Version:` in `style.css` and `AARDLING_THEME_VERSION` in `functions.php`. Add a `## x.y.z` section to `CHANGELOG.md`.
