@@ -9,6 +9,7 @@
  * - If Site Kit places its Analytics code, only the address of its script changes, so Site Kit's
  *   own events keep working. Otherwise the theme prints the standard Google tag itself.
  * - Logged-in users aren't tracked, as with Site Kit's default.
+ * - Nothing loads from googletagmanager.com any more, so its DNS prefetch hint goes too.
  * - The measurement ID and the path can be overridden with
  *   define( 'AARDLING_THEME_GA4_ID', 'G-...' ); and define( 'AARDLING_THEME_GA4_PATH', '/.../' );
  *   in wp-config.php. An empty ID turns the theme's tag off.
@@ -49,6 +50,32 @@ add_filter(
 		return str_replace( 'https://www.googletagmanager.com/gtag/js?', $ga4['url'] . '?', (string) $src );
 	},
 	10,
+	2
+);
+
+/**
+ * Drop the dns-prefetch and preconnect hints for googletagmanager.com that WordPress or Site
+ * Kit still print: the tag comes from the gateway.
+ */
+add_filter(
+	'wp_resource_hints',
+	function ( $urls, $relation_type ) {
+		$ga4 = aardling_theme_ga4();
+		if ( '' === $ga4['url'] || ! in_array( $relation_type, array( 'dns-prefetch', 'preconnect' ), true ) ) {
+			return $urls;
+		}
+
+		return array_values(
+			array_filter(
+				(array) $urls,
+				function ( $url ) {
+					$href = is_array( $url ) ? (string) ( $url['href'] ?? '' ) : (string) $url;
+					return false === strpos( $href, 'googletagmanager.com' );
+				}
+			)
+		);
+	},
+	PHP_INT_MAX,
 	2
 );
 

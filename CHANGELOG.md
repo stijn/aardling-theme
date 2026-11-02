@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.3
+- Drops the DNS prefetch hint for www.googletagmanager.com from every page: since 1.3.2 nothing loads from there.
+
 ## 1.3.2
 - GA4 loads from aardling.com/ptp3/, the Google tag gateway path set up at Cloudflare, instead of googletagmanager.com. With Site Kit's Analytics code off, the theme prints the Google tag itself (once, not for logged-in users); with it on, only the address of Site Kit's script changes.
 - Measurement ID and path can be changed with `AARDLING_THEME_GA4_ID` and `AARDLING_THEME_GA4_PATH` in wp-config.php; an empty ID turns the tag off.

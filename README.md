@@ -9,7 +9,7 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 - Twenty Nineteen options in Appearance > Customize > Aardling (`inc/customizer.php`): everything Options for Twenty Nineteen offers, free and premium, with the same setting names so saved values carry over. Off while that plugin is active.
 - Stops Rank Math from emptying the whole WP Super Cache whenever its sitemap changes.
 - Clears changed pages from Cloudflare's cache (see below), so a Cloudflare Cache Rule can keep the pages at the edge without APO.
-- Loads GA4 through Google tag gateway (`inc/analytics.php`): the Google tag comes from `aardling.com/ptp3/`, which Cloudflare relays to Google. Prints the tag itself when Site Kit's Analytics code is off, or points Site Kit's script at the path when it's on. Not for logged-in users. Override with `AARDLING_THEME_GA4_ID` and `AARDLING_THEME_GA4_PATH` in wp-config.php.
+- Loads GA4 through Google tag gateway (`inc/analytics.php`): the Google tag comes from `aardling.com/ptp3/`, which Cloudflare relays to Google. Prints the tag itself when Site Kit's Analytics code is off, or points Site Kit's script at the path when it's on. Not for logged-in users, and no DNS prefetch for googletagmanager.com. Override with `AARDLING_THEME_GA4_ID` and `AARDLING_THEME_GA4_PATH` in wp-config.php.
 
 ## Cloudflare cache purge
 - Needs the zone ID (Cloudflare > aardling.com > Overview, API box) and an API token with only Zone > Cache Purge > Purge for aardling.com. Enter both on Appearance > Aardling, or `define( 'AARDLING_THEME_CLOUDFLARE_ZONE', '...' );` and `define( 'AARDLING_THEME_CLOUDFLARE_TOKEN', '...' );` in wp-config.php. Without both, nothing is sent.
