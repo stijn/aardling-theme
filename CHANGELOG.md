@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.1
+- The PWA plugin is gone. Browsers that still run its service worker get, at their next update check, a worker that clears its caches and unregisters itself, so the plugin's offline page can no longer appear. Does nothing while the PWA plugin is active.
+
 ## 1.3.0
 - Appearance > Customize > Aardling: every option the plugin Options for Twenty Nineteen offers, free and premium, in the theme. Font sizes (also for mobile and tablet), dashes, logo size, background, circle and position, title and description alignment or hiding, a scroll-to-content arrow, menu font sizes, title weight and case, where the date and author show, hiding dates, authors, featured images or titles, category and tag descriptions, full posts in archives, Rank Math or Yoast breadcrumbs, Jetpack infinite scroll, footer colour, removing or replacing the "Proudly powered by WordPress" credit, background and primary colour (hex), overlay opacity and colour levels.
 - The plugin's options keep their setting names, so the values saved now carry over. The options stay off while the plugin is active; deactivate it and the theme takes over.

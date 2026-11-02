@@ -5,11 +5,36 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.3.0' );
+define( 'AARDLING_THEME_VERSION', '1.3.1' );
 
 require_once __DIR__ . '/inc/updater.php';
 require_once __DIR__ . '/inc/cloudflare.php';
 require_once __DIR__ . '/inc/customizer.php';
+
+/**
+ * The PWA plugin was removed on 2026-11-02, but browsers that installed its
+ * service worker keep running it and can show its offline page. When they
+ * check for an update, hand them a worker that unregisters itself.
+ */
+add_action(
+	'init',
+	function () {
+		if ( class_exists( 'WP_Service_Workers' ) ) {
+			return; // The PWA plugin is active again; leave its worker alone.
+		}
+		$path = (string) wp_parse_url( (string) ( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
+		if ( '/wp.serviceworker' !== $path && ! isset( $_GET['wp_service_worker'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			return;
+		}
+		status_header( 200 );
+		header( 'Content-Type: application/javascript; charset=utf-8' );
+		header( 'Cache-Control: no-cache' );
+		echo "self.addEventListener('install',function(){self.skipWaiting();});\n";
+		echo "self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(k){return Promise.all(k.map(function(n){return caches.delete(n);}));}).then(function(){return self.registration.unregister();}));});\n";
+		exit;
+	},
+	0
+);
 
 /**
  * Twenty Nineteen enqueues get_stylesheet_uri() as 'twentynineteen-style'.

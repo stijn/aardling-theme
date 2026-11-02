@@ -2,7 +2,7 @@
 Theme Name: Aardling
 Template: twentynineteen
 Description: Child theme of Twenty Nineteen for aardling.com. Swaps the bottom menu's Font Awesome icon font for three inline SVG icons, adds the Twenty Nineteen options of Options for Twenty Nineteen to the Customizer, updates itself from its GitHub repo stijn/aardling-theme, and clears changed pages from Cloudflare's cache. Twenty Nineteen's own stylesheet still does all the styling.
-Version: 1.3.0
+Version: 1.3.1
 Author: Stijn Vogels
 Requires at least: 6.9
 Requires PHP: 7.4
