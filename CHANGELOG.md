@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.3
+- Comments are now closed in the database too, once, right after this version arrives: every post, page and attachment (1,005 posts and one page still had comments open, 1,741 posts pings), and the defaults for new posts. The update goes straight to the table, so no post's modified date changes and no cache needs clearing. The theme keeps closing them as before.
+- Every post in the reading boxes has its image now, not just the first recent one: the medium file at its own size, above the title, lazy-loaded. On phones the image sits beside the title at half width, pixel for pixel on double-density screens. Posts without a featured image stay text only.
+- Trending entries carry the image too. The stored lists are rebuilt on the next request for `/aardling-reads.json`; Trending keeps its ranking until the hourly check.
+
 ## 1.4.2
 - Comments are closed on the whole site: 1,005 older posts and one page still accepted them, each through its own setting. The form, replies and pingbacks are gone; existing comments stay visible and the "Reacties zijn gesloten." line under them is hidden. Nothing in the database changes (`inc/comments.php`).
 - On posts with comments, the reading boxes now come before the comments.

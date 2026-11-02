@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const AARDLING_THEME_READS_PATH    = '/aardling-reads.json';
 const AARDLING_THEME_READS_DAYS    = 7;
 const AARDLING_THEME_READS_GRAPHQL = 'https://api.cloudflare.com/client/v4/graphql';
-const AARDLING_THEME_READS_FORMAT  = 3; // Bump when the stored items change shape; Recently is then rebuilt.
+const AARDLING_THEME_READS_FORMAT  = 4; // Bump when the stored items change shape; both lists are then rebuilt.
 
 /**
  * Box titles, in the site's language. Filter: aardling_theme_reads_labels.
@@ -74,6 +74,32 @@ function aardling_theme_reads_item( WP_Post $post, bool $thumb = false ) : array
 		}
 	}
 	return $item;
+}
+
+/**
+ * A Trending entry: a post with its thumbnail, without a date (the box ranks, it doesn't date).
+ *
+ * @param WP_Post $post Post.
+ */
+function aardling_theme_reads_trending_item( WP_Post $post ) : array {
+	return array_diff_key( aardling_theme_reads_item( $post, true ), array_flip( array( 'date', 'iso' ) ) );
+}
+
+/**
+ * The thumbnail tag for a Suggested post, like the one the script builds for the other boxes.
+ *
+ * @param array $item From aardling_theme_reads_item() with $thumb.
+ */
+function aardling_theme_reads_thumb_html( array $item ) : string {
+	if ( empty( $item['thumb'] ) ) {
+		return '';
+	}
+	return sprintf(
+		'<img class="aardling-reads__thumb" src="%s" width="%d" height="%d" alt="" loading="lazy" decoding="async">',
+		esc_url( $item['thumb'] ),
+		(int) $item['thumb_w'],
+		(int) $item['thumb_h']
+	);
 }
 
 /**
@@ -293,7 +319,7 @@ function aardling_theme_reads_trending_from( array $rows ) : array {
 		if ( ! $post || isset( $items[ $id ] ) || 'post' !== $post->post_type || 'publish' !== $post->post_status || '' !== $post->post_password ) {
 			continue;
 		}
-		$items[ $id ] = array_intersect_key( aardling_theme_reads_item( $post ), array_flip( array( 'id', 'url', 'title' ) ) );
+		$items[ $id ] = aardling_theme_reads_trending_item( $post );
 		if ( 5 === count( $items ) ) {
 			break;
 		}
@@ -365,10 +391,19 @@ add_action( 'init', function () {
 	if ( AARDLING_THEME_READS_PATH !== $path ) {
 		return;
 	}
-	if ( AARDLING_THEME_READS_FORMAT !== (int) aardling_theme_reads_data()['format'] ) {
-		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent(), 'format' => AARDLING_THEME_READS_FORMAT ) );
-	}
 	$data = aardling_theme_reads_data();
+	if ( AARDLING_THEME_READS_FORMAT !== (int) $data['format'] ) {
+		// Trending keeps its ranking until the next hourly check; only the entries are rebuilt.
+		$trending = array();
+		foreach ( (array) $data['trending'] as $old ) {
+			$post = get_post( (int) ( $old['id'] ?? 0 ) );
+			if ( $post instanceof WP_Post && 'publish' === $post->post_status && '' === $post->post_password ) {
+				$trending[] = aardling_theme_reads_trending_item( $post );
+			}
+		}
+		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent(), 'trending' => $trending, 'format' => AARDLING_THEME_READS_FORMAT ) );
+		$data = aardling_theme_reads_data();
+	}
 	$body = (string) wp_json_encode(
 		array(
 			'recent'   => $data['recent'],
@@ -398,9 +433,12 @@ function aardling_theme_reads_box( string $list, array $posts = array() ) : stri
 	$items  = '';
 
 	foreach ( $posts as $post ) {
-		$item   = aardling_theme_reads_item( $post );
+		$item   = aardling_theme_reads_item( $post, true );
+		$thumb  = aardling_theme_reads_thumb_html( $item );
 		$items .= sprintf(
-			'<li class="aardling-reads__item"><time class="aardling-reads__date" datetime="%s">%s</time><a class="aardling-reads__title" href="%s">%s</a></li>',
+			'<li class="aardling-reads__item%s">%s<time class="aardling-reads__date" datetime="%s">%s</time><a class="aardling-reads__title" href="%s">%s</a></li>',
+			'' !== $thumb ? ' aardling-reads__item--thumb' : '',
+			$thumb,
 			esc_attr( $item['iso'] ),
 			esc_html( $item['date'] ),
 			esc_url( $item['url'] ),
@@ -457,7 +495,7 @@ add_action( 'get_footer', 'aardling_theme_reads_render', 10 );
 
 /**
  * Fills Trending (at least 3 posts) and Recently (at least 1) from the JSON file, leaving out the
- * post being read; shows the first recent post's image above it. Text goes in as text.
+ * post being read; each post with its image. Text goes in as text.
  */
 function aardling_theme_reads_script() : string {
 	return <<<'JS'
@@ -465,8 +503,8 @@ function aardling_theme_reads_script() : string {
 fetch(s.getAttribute('data-src'),{cache:'no-cache',credentials:'omit'}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(!d){return;}
 [['trending',3],['recent',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
 var items=(d[k[0]]||[]).filter(function(p){return p&&p.id!==cur&&/^https?:\/\//.test(p.url||'');}).slice(0,4);if(!list||items.length<k[1]){return;}
-items.forEach(function(p,i){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
-if(p.thumb&&i===0){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);}
+items.forEach(function(p){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
+if(p.thumb){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);li.className+=' aardling-reads__item--thumb';}
 if(p.date){var t=document.createElement('time');t.className='aardling-reads__date';t.dateTime=p.iso||'';t.textContent=p.date;li.appendChild(t);}
 a.className='aardling-reads__title';a.href=p.url;a.textContent=p.title||'';li.appendChild(a);list.appendChild(li);});box.hidden=false;});}).catch(function(){});})();
 JS;
@@ -493,11 +531,18 @@ add_action( 'wp_head', function () {
 		. '.aardling-reads__list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:1.5rem 2rem}'
 		. '@media (min-width:600px){.aardling-reads__list{grid-template-columns:repeat(2,minmax(0,1fr))}}'
 		. '@media (min-width:1168px){.aardling-reads__list{grid-template-columns:repeat(4,minmax(0,1fr))}.aardling-reads__item+.aardling-reads__item{border-left:1px solid var(--aardling-reads-line);padding-left:2rem;margin-left:-1rem}}'
-		. '.aardling-reads__item{margin:0;line-height:1.35;overflow-wrap:break-word;hyphens:manual}'
+		. '.aardling-reads__item{margin:0;line-height:1.35;overflow-wrap:break-word;hyphens:manual;display:flex;flex-direction:column;align-items:flex-start}'
 		. '.aardling-reads__date{display:block;white-space:nowrap;margin-bottom:.5rem;font-family:' . $sans . ';font-size:.6em;letter-spacing:.12em;text-transform:uppercase;color:var(--aardling-reads-muted)}'
 		. '.aardling-reads__title{font-size:1.15em;text-decoration:none}'
 		. '.aardling-reads__title:hover,.aardling-reads__title:focus{text-decoration:underline}'
-		. '.aardling-reads__thumb{display:block;max-width:100%;height:auto;margin:0 0 .75rem;border-radius:10px}'
+		// The medium file at its own size, above the post (above Trending's number too); scaled down,
+		// never up, only where a column is narrower. One column (phones): beside the title at half
+		// width, which is pixel for pixel on their double-density screens. Beside it go two lines (date
+		// or number, then title); the empty third row takes up the rest of the image's height.
+		. '.aardling-reads__thumb{order:-1;display:block;max-width:100%;height:auto;margin:0 0 .75rem;border-radius:10px}'
+		. '@media (max-width:599px){.aardling-reads__item--thumb{display:grid;grid-template-columns:100px minmax(0,1fr);grid-template-rows:auto auto 1fr;column-gap:1rem;align-items:start}'
+		. '.aardling-reads__item--thumb>*,.aardling-reads__item--thumb::before{grid-column:2}'
+		. '.aardling-reads__item--thumb>.aardling-reads__thumb{grid-column:1;grid-row:1/span 3;width:100px;margin:0;border-radius:6px}}'
 		. '.aardling-reads__box--trending{--aardling-reads-bg:var(--aardling-reads-hot-bg);--aardling-reads-line:var(--aardling-reads-hot-line)}'
 		. '.aardling-reads__box--trending .aardling-reads__list{counter-reset:aardling-reads}'
 		. '.aardling-reads__box--trending .aardling-reads__item{counter-increment:aardling-reads}'
