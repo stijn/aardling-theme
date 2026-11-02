@@ -23,7 +23,7 @@ Aardling, the child theme of Twenty Nineteen that runs aardling.com. Twenty Nine
 - Suggested is rendered into the page: posts sharing the most tags with the current one, then posts from its categories.
 - The boxes sit after the post navigation: before the comments when there are any, else before the footer. Colours are CSS variables (`--aardling-reads-*`) that switch to Deluminator's `--dl-*` palette under `html.deluminator-palette.deluminator-dark`.
 - Trending and Recently are empty boxes in the page, filled by an inline script from `/aardling-reads.json` (served by the theme, cached by Cloudflare's page rule, cleared by the theme when a list changes). Without JavaScript they stay hidden.
-- Each post shows its featured image: the medium file at its own size (width and height set, `loading="lazy"`), above the title; on screens under 600 px beside it at half width.
+- Each post shows its featured image: the medium file at its own size (width and height set, `loading="lazy"`), above the title; on screens under 600 px beside it at half width. No column is narrower than that image: two columns from 600 px, four from 1536 px.
 - Recently is rebuilt whenever a post is published, updated or unpublished.
 - Trending is rebuilt hourly from Cloudflare Web Analytics (`rumPageloadEventsAdaptiveGroups`, last 7 days, bots excluded), matched to published posts. Needs the account ID, the site tag and an API token with only Account > Account Analytics > Read: on Appearance > Aardling, or `AARDLING_THEME_CLOUDFLARE_ACCOUNT`, `AARDLING_THEME_WEB_ANALYTICS_SITE` and `AARDLING_THEME_CLOUDFLARE_ANALYTICS_TOKEN` in wp-config.php. The box shows from 3 posts; after three days without a good answer it hides.
 

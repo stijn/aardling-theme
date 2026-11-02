@@ -529,8 +529,12 @@ add_action( 'wp_head', function () {
 		. '.aardling-reads__label{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);margin:0;padding:.4rem 2rem;background:var(--aardling-reads-bg);border:1px solid var(--aardling-reads-line);'
 		. 'font-family:' . $sans . ';font-size:.7111em;font-weight:500;line-height:1.4;letter-spacing:.2em;text-transform:uppercase;color:var(--aardling-reads-muted);white-space:nowrap}'
 		. '.aardling-reads__list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:1.5rem 2rem}'
+		// No column narrower than its 200 px image, with a 17 px scrollbar too. Two columns from 600 px,
+		// a little tighter just above 768 px, where the side margins grow; four from 1536 px, where the
+		// last three still have 200 px beside their dividers.
 		. '@media (min-width:600px){.aardling-reads__list{grid-template-columns:repeat(2,minmax(0,1fr))}}'
-		. '@media (min-width:1168px){.aardling-reads__list{grid-template-columns:repeat(4,minmax(0,1fr))}.aardling-reads__item+.aardling-reads__item{border-left:1px solid var(--aardling-reads-line);padding-left:2rem;margin-left:-1rem}}'
+		. '@media (min-width:768px) and (max-width:829px){.aardling-reads__box{padding-left:1rem;padding-right:1rem}.aardling-reads__list{column-gap:1.5rem}}'
+		. '@media (min-width:1536px){.aardling-reads__list{grid-template-columns:repeat(4,minmax(0,1fr))}.aardling-reads__item+.aardling-reads__item{border-left:1px solid var(--aardling-reads-line);padding-left:2rem;margin-left:-1rem}}'
 		. '.aardling-reads__item{margin:0;line-height:1.35;overflow-wrap:break-word;hyphens:manual;display:flex;flex-direction:column;align-items:flex-start}'
 		. '.aardling-reads__date{display:block;white-space:nowrap;margin-bottom:.5rem;font-family:' . $sans . ';font-size:.6em;letter-spacing:.12em;text-transform:uppercase;color:var(--aardling-reads-muted)}'
 		. '.aardling-reads__title{font-size:1.15em;text-decoration:none}'

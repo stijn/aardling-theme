@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.5
+- Reading box images show at their full 200 px on laptop screens too. Four columns now start at 1,536 px instead of 1,168, so the three columns behind the dividers are never narrower than the image (they were down to 131 px); in between, two columns. Just above 768 px (an upright older iPad) the boxes use slightly less padding and gap for the same reason.
+
 ## 1.4.4
 - Reading boxes on phones: less box padding, slightly smaller titles and a narrower gap beside the image, so titles get about 170 px instead of 140 and wrap into fewer lines.
 
