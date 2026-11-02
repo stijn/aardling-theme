@@ -5,11 +5,12 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.3.1' );
+define( 'AARDLING_THEME_VERSION', '1.3.2' );
 
 require_once __DIR__ . '/inc/updater.php';
 require_once __DIR__ . '/inc/cloudflare.php';
 require_once __DIR__ . '/inc/customizer.php';
+require_once __DIR__ . '/inc/analytics.php';
 
 /**
  * The PWA plugin was removed on 2026-11-02, but browsers that installed its

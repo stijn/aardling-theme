@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2
+- GA4 loads from aardling.com/ptp3/, the Google tag gateway path set up at Cloudflare, instead of googletagmanager.com. With Site Kit's Analytics code off, the theme prints the Google tag itself (once, not for logged-in users); with it on, only the address of Site Kit's script changes.
+- Measurement ID and path can be changed with `AARDLING_THEME_GA4_ID` and `AARDLING_THEME_GA4_PATH` in wp-config.php; an empty ID turns the tag off.
+
 ## 1.3.1
 - The PWA plugin is gone. Browsers that still run its service worker get, at their next update check, a worker that clears its caches and unregisters itself, so the plugin's offline page can no longer appear. Does nothing while the PWA plugin is active.
 
