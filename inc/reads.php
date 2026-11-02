@@ -30,6 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const AARDLING_THEME_READS_PATH    = '/aardling-reads.json';
 const AARDLING_THEME_READS_DAYS    = 7;
 const AARDLING_THEME_READS_GRAPHQL = 'https://api.cloudflare.com/client/v4/graphql';
+const AARDLING_THEME_READS_FORMAT  = 2; // Bump when the stored items change shape; Recently is then rebuilt.
 
 /**
  * Box titles, in the site's language. Filter: aardling_theme_reads_labels.
@@ -63,7 +64,7 @@ function aardling_theme_reads_item( WP_Post $post, bool $thumb = false ) : array
 		'iso'   => (string) get_the_date( 'c', $post ),
 	);
 	if ( $thumb ) {
-		$item['thumb'] = (string) get_the_post_thumbnail_url( $post, 'thumbnail' );
+		$item['thumb'] = (string) get_the_post_thumbnail_url( $post, 'medium' );
 	}
 	return $item;
 }
@@ -164,6 +165,7 @@ function aardling_theme_reads_data() : array {
 		'trending_time'    => 0,
 		'trending_ok_time' => 0,
 		'trending_error'   => '',
+		'format'           => 0,
 	);
 	$data     = get_option( 'aardling_theme_reads', array() );
 
@@ -356,8 +358,8 @@ add_action( 'init', function () {
 	if ( AARDLING_THEME_READS_PATH !== $path ) {
 		return;
 	}
-	if ( false === get_option( 'aardling_theme_reads' ) ) {
-		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent() ) );
+	if ( AARDLING_THEME_READS_FORMAT !== (int) aardling_theme_reads_data()['format'] ) {
+		aardling_theme_reads_save( array( 'recent' => aardling_theme_reads_recent(), 'format' => AARDLING_THEME_READS_FORMAT ) );
 	}
 	$data = aardling_theme_reads_data();
 	$body = (string) wp_json_encode(
@@ -435,7 +437,7 @@ add_action( 'get_footer', function () {
 
 /**
  * Fills Trending (at least 3 posts) and Recently (at least 1) from the JSON file, leaving out the
- * post being read; shows the first recent post's thumbnail. Text goes in as text.
+ * post being read; shows the first recent post's image above it. Text goes in as text.
  */
 function aardling_theme_reads_script() : string {
 	return <<<'JS'
@@ -444,7 +446,7 @@ fetch(s.getAttribute('data-src'),{cache:'no-cache',credentials:'omit'}).then(fun
 [['trending',3],['recent',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
 var items=(d[k[0]]||[]).filter(function(p){return p&&p.id!==cur&&/^https?:\/\//.test(p.url||'');}).slice(0,4);if(!list||items.length<k[1]){return;}
 items.forEach(function(p,i){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
-if(p.thumb&&i===0){var im=new Image(150,150);im.src=p.thumb;im.alt='';im.loading='lazy';im.decoding='async';im.className='aardling-reads__thumb';li.appendChild(im);}
+if(p.thumb&&i===0){var im=new Image();im.src=p.thumb;im.alt='';im.loading='lazy';im.decoding='async';im.className='aardling-reads__thumb';li.appendChild(im);}
 if(p.date){var t=document.createElement('time');t.className='aardling-reads__date';t.dateTime=p.iso||'';t.textContent=p.date;li.appendChild(t);}
 a.className='aardling-reads__title';a.href=p.url;a.textContent=p.title||'';li.appendChild(a);list.appendChild(li);});box.hidden=false;});}).catch(function(){});})();
 JS;
@@ -460,16 +462,17 @@ add_action( 'wp_head', function () {
 		. '@media (min-width:768px){.aardling-reads{margin:calc(4*1rem) calc(10% + 60px)}}'
 		. '.aardling-reads__box{position:relative;border:1px solid #e6e6e6;background:#fff;padding:calc(2.5*1rem) 1.5rem 1.5rem}'
 		. '.aardling-reads__box[hidden]{display:none}'
+		. '.aardling-reads__label:before{display:none}'
 		. '.aardling-reads__label{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);margin:0;padding:.4rem 2rem;background:#fff;border:1px solid #e6e6e6;'
 		. 'font-family:' . $sans . ';font-size:.7111em;font-weight:500;line-height:1.4;letter-spacing:.2em;text-transform:uppercase;color:#767676;white-space:nowrap}'
 		. '.aardling-reads__list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:1.5rem 2rem}'
 		. '@media (min-width:600px){.aardling-reads__list{grid-template-columns:repeat(2,minmax(0,1fr))}}'
 		. '@media (min-width:1168px){.aardling-reads__list{grid-template-columns:repeat(4,minmax(0,1fr))}.aardling-reads__item+.aardling-reads__item{border-left:1px solid #e6e6e6;padding-left:2rem;margin-left:-1rem}}'
-		. '.aardling-reads__item{margin:0;line-height:1.35;overflow-wrap:break-word;hyphens:auto}'
-		. '.aardling-reads__date{display:block;margin-bottom:.5rem;font-family:' . $sans . ';font-size:.6em;letter-spacing:.12em;text-transform:uppercase;color:#767676}'
+		. '.aardling-reads__item{margin:0;line-height:1.35;overflow-wrap:break-word;hyphens:manual}'
+		. '.aardling-reads__date{display:block;white-space:nowrap;margin-bottom:.5rem;font-family:' . $sans . ';font-size:.6em;letter-spacing:.12em;text-transform:uppercase;color:#767676}'
 		. '.aardling-reads__title{font-size:1.15em;text-decoration:none}'
 		. '.aardling-reads__title:hover,.aardling-reads__title:focus{text-decoration:underline}'
-		. '.aardling-reads__thumb{float:right;width:96px;height:96px;object-fit:cover;margin:0 0 .5rem 1rem}'
+		. '.aardling-reads__thumb{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;margin:0 0 .75rem}'
 		. '.aardling-reads__box--trending{background:#fdf3e2;border-color:#f1cf91}'
 		. '.aardling-reads__box--trending .aardling-reads__label{border-color:#f1cf91}'
 		. '.aardling-reads__box--trending .aardling-reads__list{counter-reset:aardling-reads}'
