@@ -30,7 +30,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const AARDLING_THEME_READS_PATH    = '/aardling-reads.json';
 const AARDLING_THEME_READS_DAYS    = 7;
 const AARDLING_THEME_READS_GRAPHQL = 'https://api.cloudflare.com/client/v4/graphql';
-const AARDLING_THEME_READS_FORMAT  = 2; // Bump when the stored items change shape; Recently is then rebuilt.
+const AARDLING_THEME_READS_FORMAT  = 3; // Bump when the stored items change shape; Recently is then rebuilt.
 
 /**
  * Box titles, in the site's language. Filter: aardling_theme_reads_labels.
@@ -64,7 +64,14 @@ function aardling_theme_reads_item( WP_Post $post, bool $thumb = false ) : array
 		'iso'   => (string) get_the_date( 'c', $post ),
 	);
 	if ( $thumb ) {
-		$item['thumb'] = (string) get_the_post_thumbnail_url( $post, 'medium' );
+		// The medium size exactly as WordPress made it (200 px wide on aardling.com), with its
+		// dimensions, so the browser reserves the space and never stretches it.
+		$image = has_post_thumbnail( $post ) ? wp_get_attachment_image_src( (int) get_post_thumbnail_id( $post ), 'medium' ) : false;
+		if ( is_array( $image ) && ! empty( $image[0] ) ) {
+			$item['thumb']   = (string) $image[0];
+			$item['thumb_w'] = (int) $image[1];
+			$item['thumb_h'] = (int) $image[2];
+		}
 	}
 	return $item;
 }
@@ -411,15 +418,20 @@ function aardling_theme_reads_box( string $list, array $posts = array() ) : stri
 	);
 }
 
-// The three boxes, after the post, its navigation and comments, before the site footer.
-add_action( 'get_footer', function () {
-	if ( ! is_singular( 'post' ) ) {
+/**
+ * Print the three boxes once per page: before the comments when the post has any (Twenty
+ * Nineteen's single.php loads them right after the post navigation), otherwise before the footer.
+ */
+function aardling_theme_reads_render() : void {
+	static $done = false;
+	if ( $done || ! is_singular( 'post' ) ) {
 		return;
 	}
 	$post = get_queried_object();
 	if ( ! $post instanceof WP_Post || post_password_required( $post ) ) {
 		return;
 	}
+	$done = true;
 
 	$related = aardling_theme_reads_related( $post );
 	printf(
@@ -433,7 +445,15 @@ add_action( 'get_footer', function () {
 	);
 	// noptimize: Autoptimize leaves it where it is, right after the boxes it fills.
 	echo '<!--noptimize--><script>' . aardling_theme_reads_script() . '</script><!--/noptimize-->' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-}, 10 );
+}
+
+// comments_template() asks for the template file just before it prints the comments; the boxes go
+// out first, so the comments follow them.
+add_filter( 'comments_template', function ( $file ) {
+	aardling_theme_reads_render();
+	return $file;
+} );
+add_action( 'get_footer', 'aardling_theme_reads_render', 10 );
 
 /**
  * Fills Trending (at least 3 posts) and Recently (at least 1) from the JSON file, leaving out the
@@ -446,38 +466,42 @@ fetch(s.getAttribute('data-src'),{cache:'no-cache',credentials:'omit'}).then(fun
 [['trending',3],['recent',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
 var items=(d[k[0]]||[]).filter(function(p){return p&&p.id!==cur&&/^https?:\/\//.test(p.url||'');}).slice(0,4);if(!list||items.length<k[1]){return;}
 items.forEach(function(p,i){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
-if(p.thumb&&i===0){var im=new Image();im.src=p.thumb;im.alt='';im.loading='lazy';im.decoding='async';im.className='aardling-reads__thumb';li.appendChild(im);}
+if(p.thumb&&i===0){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);}
 if(p.date){var t=document.createElement('time');t.className='aardling-reads__date';t.dateTime=p.iso||'';t.textContent=p.date;li.appendChild(t);}
 a.className='aardling-reads__title';a.href=p.url;a.textContent=p.title||'';li.appendChild(a);list.appendChild(li);});box.hidden=false;});}).catch(function(){});})();
 JS;
 }
 
-// Styles, on single posts only. Fonts and link colour come from Twenty Nineteen.
+// Styles, on single posts only. Fonts and link colour come from Twenty Nineteen; the box colours
+// are variables, switched to Deluminator's palette (--dl-*) when its dark mode is on.
 add_action( 'wp_head', function () {
 	if ( ! is_singular( 'post' ) ) {
 		return;
 	}
 	$sans = '-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue",sans-serif';
-	$css  = '.aardling-reads{margin:calc(2*1rem) 1rem;display:grid;gap:calc(3*1rem)}'
+	$css  = '.aardling-reads{--aardling-reads-bg:#fff;--aardling-reads-line:#e6e6e6;--aardling-reads-muted:#767676;'
+		. '--aardling-reads-hot-bg:#fdf3e2;--aardling-reads-hot-line:#f1cf91;--aardling-reads-hot-number:#e8890c;'
+		. 'margin:calc(2*1rem) 1rem;display:grid;gap:calc(3*1rem)}'
+		. 'html.deluminator-palette.deluminator-dark .aardling-reads{--aardling-reads-bg:var(--dl-surface);--aardling-reads-line:var(--dl-line);--aardling-reads-muted:var(--dl-muted);'
+		. '--aardling-reads-hot-bg:var(--dl-surface-2);--aardling-reads-hot-line:var(--dl-mark);--aardling-reads-hot-number:var(--dl-mark)}'
 		. '@media (min-width:768px){.aardling-reads{margin:calc(4*1rem) calc(10% + 60px)}}'
-		. '.aardling-reads__box{position:relative;border:1px solid #e6e6e6;background:#fff;padding:calc(2.5*1rem) 1.5rem 1.5rem}'
+		. '.aardling-reads__box{position:relative;border:1px solid var(--aardling-reads-line);background:var(--aardling-reads-bg);padding:calc(2.5*1rem) 1.5rem 1.5rem}'
 		. '.aardling-reads__box[hidden]{display:none}'
 		. '.aardling-reads__label:before{display:none}'
-		. '.aardling-reads__label{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);margin:0;padding:.4rem 2rem;background:#fff;border:1px solid #e6e6e6;'
-		. 'font-family:' . $sans . ';font-size:.7111em;font-weight:500;line-height:1.4;letter-spacing:.2em;text-transform:uppercase;color:#767676;white-space:nowrap}'
+		. '.aardling-reads__label{position:absolute;top:0;left:50%;transform:translate(-50%,-50%);margin:0;padding:.4rem 2rem;background:var(--aardling-reads-bg);border:1px solid var(--aardling-reads-line);'
+		. 'font-family:' . $sans . ';font-size:.7111em;font-weight:500;line-height:1.4;letter-spacing:.2em;text-transform:uppercase;color:var(--aardling-reads-muted);white-space:nowrap}'
 		. '.aardling-reads__list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:1.5rem 2rem}'
 		. '@media (min-width:600px){.aardling-reads__list{grid-template-columns:repeat(2,minmax(0,1fr))}}'
-		. '@media (min-width:1168px){.aardling-reads__list{grid-template-columns:repeat(4,minmax(0,1fr))}.aardling-reads__item+.aardling-reads__item{border-left:1px solid #e6e6e6;padding-left:2rem;margin-left:-1rem}}'
+		. '@media (min-width:1168px){.aardling-reads__list{grid-template-columns:repeat(4,minmax(0,1fr))}.aardling-reads__item+.aardling-reads__item{border-left:1px solid var(--aardling-reads-line);padding-left:2rem;margin-left:-1rem}}'
 		. '.aardling-reads__item{margin:0;line-height:1.35;overflow-wrap:break-word;hyphens:manual}'
-		. '.aardling-reads__date{display:block;white-space:nowrap;margin-bottom:.5rem;font-family:' . $sans . ';font-size:.6em;letter-spacing:.12em;text-transform:uppercase;color:#767676}'
+		. '.aardling-reads__date{display:block;white-space:nowrap;margin-bottom:.5rem;font-family:' . $sans . ';font-size:.6em;letter-spacing:.12em;text-transform:uppercase;color:var(--aardling-reads-muted)}'
 		. '.aardling-reads__title{font-size:1.15em;text-decoration:none}'
 		. '.aardling-reads__title:hover,.aardling-reads__title:focus{text-decoration:underline}'
-		. '.aardling-reads__thumb{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;margin:0 0 .75rem}'
-		. '.aardling-reads__box--trending{background:#fdf3e2;border-color:#f1cf91}'
-		. '.aardling-reads__box--trending .aardling-reads__label{border-color:#f1cf91}'
+		. '.aardling-reads__thumb{display:block;max-width:100%;height:auto;margin:0 0 .75rem;border-radius:10px}'
+		. '.aardling-reads__box--trending{--aardling-reads-bg:var(--aardling-reads-hot-bg);--aardling-reads-line:var(--aardling-reads-hot-line)}'
 		. '.aardling-reads__box--trending .aardling-reads__list{counter-reset:aardling-reads}'
-		. '.aardling-reads__box--trending .aardling-reads__item{counter-increment:aardling-reads;border-color:#f1cf91}'
-		. '.aardling-reads__box--trending .aardling-reads__item::before{content:counter(aardling-reads) ".";display:block;margin-bottom:.75rem;font-size:2.2em;font-weight:700;line-height:1;color:#e8890c}';
+		. '.aardling-reads__box--trending .aardling-reads__item{counter-increment:aardling-reads}'
+		. '.aardling-reads__box--trending .aardling-reads__item::before{content:counter(aardling-reads) ".";display:block;margin-bottom:.75rem;font-size:2.2em;font-weight:700;line-height:1;color:var(--aardling-reads-hot-number)}';
 
 	echo '<style id="aardling-reads-css">' . $css . "</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed CSS.
 }, 100 );

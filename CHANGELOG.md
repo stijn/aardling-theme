@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+- Comments are closed on the whole site: 1,005 older posts and one page still accepted them, each through its own setting. The form, replies and pingbacks are gone; existing comments stay visible and the "Reacties zijn gesloten." line under them is hidden. Nothing in the database changes (`inc/comments.php`).
+- On posts with comments, the reading boxes now come before the comments.
+- The reading boxes follow Deluminator's dark palettes: their colours are CSS variables that switch to Deluminator's `--dl-*` colours in dark mode.
+- The first recent post's image is the medium size at its exact dimensions (width and height set, never stretched), lazy-loaded.
+
 ## 1.4.1
 - Reading boxes: no Twenty Nineteen heading bar above the box titles, no hyphenation inside words, dates on one line, and the first recent post's image as a full-width picture above its title instead of squeezing it.
 
