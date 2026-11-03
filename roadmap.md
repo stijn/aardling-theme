@@ -5,6 +5,10 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.7.1 (2026-11-03)
+- Only the current section's subheadings in the contents bar and list.
+- "Contents" on posts tagged English.
+
 ## 1.7.0 (2026-11-03)
 - Sticky contents bar in the left margin on wide screens, with a list that opens on hover.
 - Rank Math's contents blocks removed from 36 posts.

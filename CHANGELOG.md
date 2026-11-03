@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+- Long contents lists stay short: the bar and the list show the h2s, plus only the h3s of the section being read. They fold open and shut as the reader moves on. Patriarchal Panic's 80 entries become 10 headings plus the current section's subheadings, so the bar no longer runs off the screen. Without the script everything shows.
+- The contents list is titled "Contents" on posts tagged English, "Inhoud" on the others.
+
 ## 1.7.0
 - The contents list on wide screens (from 1168 px): a small bar of lines in the left margin, one per heading, after Stack Overflow's. It stays in view while the sections scroll past and leaves with the end of the post. Pointing at it, or tabbing into it, opens the list beside it: it fades and slides in, its entries follow one after another, and the section being read is marked in the bar and the list. Colours follow Deluminator's dark palette; motion stops for readers who ask for less. Narrower screens keep the box.
 - A few lines of script mark the section being read; without them the list still works.

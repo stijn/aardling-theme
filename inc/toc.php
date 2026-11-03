@@ -12,9 +12,11 @@
  *   that stays in view while the post's sections scroll past (position: sticky, so it starts at
  *   the first heading and leaves with the end of the post; Twenty Nineteen's overflow: hidden on
  *   .site-content becomes overflow: clip there, which looks the same but lets it stick). Pointing at it, or tabbing into it,
- *   opens the list beside it. A few lines of script mark the section being read; without them
- *   the list still works.
+ *   opens the list beside it. A few lines of script mark the section being read and show only
+ *   the h2s plus the h3s of that section, in the bar and the list, so long lists stay short; the
+ *   h3s fold open and shut as the reader moves on. Without the script everything shows.
  * - Headings without an id get one from their text; the block editor usually gives them one.
+ * - Titled "Contents" on posts tagged English, otherwise in the site's language ("Inhoud").
  * - Colours follow Deluminator's dark palette. Has its own switch on Appearance > Aardling
  *   (inc/switches.php).
  *
@@ -27,6 +29,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 const AARDLING_THEME_TOC_MIN  = 3;
 const AARDLING_THEME_TOC_MARK = '<!--aardling-toc-->';
+
+/**
+ * The list's title: English on posts tagged English, otherwise in the site's language.
+ */
+function aardling_theme_toc_label() : string {
+	$post = get_post();
+	if ( $post instanceof WP_Post && has_tag( 'english', $post ) ) {
+		return 'Contents';
+	}
+	return 0 === strpos( get_locale(), 'nl' ) ? 'Inhoud' : 'Contents';
+}
 
 function aardling_theme_toc_wanted() : bool {
 	return aardling_theme_switch( 'toc' ) && is_singular( 'post' ) && in_the_loop() && is_main_query() && ! is_feed();
@@ -82,17 +95,17 @@ function aardling_theme_toc( string $content ) : array {
 	}
 	$out .= substr( $content, $from );
 
-	$label = 0 === strpos( get_locale(), 'nl' ) ? 'Inhoud' : 'Contents';
+	$label = aardling_theme_toc_label();
 	$box   = '';
 	$lines = '';
 	$float = '';
 	$i     = 0;
-	foreach ( $items as $item ) {
+	foreach ( $items as $g => $item ) {
 		$sub = '';
 		foreach ( array_merge( array( $item ), $item[2] ) as $n => $entry ) {
 			$class  = $n ? ' class="aardling-toc-float__sub"' : '';
-			$lines .= '<span class="aardling-toc-float__line' . ( $n ? ' aardling-toc-float__line--sub' : '' ) . '"></span>';
-			$float .= sprintf( '<li%s style="--i:%d"><a href="#%s">%s</a></li>', $class, $i++, esc_attr( $entry[0] ), esc_html( $entry[1] ) );
+			$lines .= '<span class="aardling-toc-float__line' . ( $n ? ' aardling-toc-float__line--sub' : '' ) . '" data-g="' . (int) $g . '"></span>';
+			$float .= sprintf( '<li%s data-g="%d" style="--i:%d"><a href="#%s">%s</a></li>', $class, (int) $g, $i++, esc_attr( $entry[0] ), esc_html( $entry[1] ) );
 			if ( $n ) {
 				$sub .= sprintf( '<li><a href="#%s">%s</a></li>', esc_attr( $entry[0] ), esc_html( $entry[1] ) );
 			}
@@ -150,7 +163,8 @@ add_filter( 'the_content', function ( $content ) {
 	return str_replace( AARDLING_THEME_TOC_MARK, '', $content );
 }, 20 );
 
-// Marks the section being read: the last heading above the line where the bar sits.
+// Marks the section being read (the last heading above the line where the bar sits) and opens the
+// h3s of its h2: every entry carries its h2's number in data-g.
 add_action( 'wp_footer', function () {
 	if ( empty( $GLOBALS['aardling_theme_toc_shown'] ) ) {
 		return;
@@ -165,8 +179,10 @@ function aardling_theme_toc_script() : string {
 var a=[].slice.call(n.querySelectorAll('.aardling-toc-float__list a')),l=[].slice.call(n.querySelectorAll('.aardling-toc-float__line'));
 var h=a.map(function(x){return document.getElementById(decodeURIComponent(x.hash.slice(1)));}),w=false;
 function mark(){w=false;var c=-1,y=window.innerHeight*0.3+2;h.forEach(function(e,i){if(e&&e.getBoundingClientRect().top<=y){c=i;}});
-a.forEach(function(x,i){var on=i===c;x.classList.toggle('is-current',on);if(on){x.setAttribute('aria-current','true');}else{x.removeAttribute('aria-current');}if(l[i]){l[i].classList.toggle('is-current',on);}});}
-window.addEventListener('scroll',function(){if(!w){w=true;window.requestAnimationFrame(mark);}},{passive:true});mark();})();
+var g=c<0?'':a[c].parentNode.getAttribute('data-g');
+a.forEach(function(x,i){var on=i===c,open=x.parentNode.getAttribute('data-g')===g;x.classList.toggle('is-current',on);if(on){x.setAttribute('aria-current','true');}else{x.removeAttribute('aria-current');}
+x.parentNode.classList.toggle('is-open',open);if(l[i]){l[i].classList.toggle('is-current',on);l[i].classList.toggle('is-open',open);}});}
+n.classList.add('is-live');window.addEventListener('scroll',function(){if(!w){w=true;window.requestAnimationFrame(mark);}},{passive:true});mark();})();
 JS;
 }
 
@@ -197,8 +213,10 @@ add_action( 'wp_head', function () {
 		. '--tf-bg:#fff;--tf-line:#e3e6e8;--tf-hover:#f1f2f3;--tf-bar:#bcbfc3;--tf-text:#6a737c;--tf-strong:#0c0d0e;font-family:' . $sans . ';line-height:1.35;hyphens:manual}}'
 		. $dark . '{--tf-bg:var(--dl-surface);--tf-line:var(--dl-line);--tf-hover:var(--dl-surface-2);--tf-bar:var(--dl-muted);--tf-text:var(--dl-muted);--tf-strong:var(--dl-strong)}'
 		. $f . ' .aardling-toc-float__inner{position:absolute;top:0;right:100%;margin-right:1.5rem}'
-		. $f . ' .aardling-toc-float__lines{display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:16px;border-radius:12px;cursor:pointer;transition:background-color .2s ease}'
-		. $f . ' .aardling-toc-float__line{display:block;width:22px;height:3px;border-radius:2px;background:var(--tf-bar);transition:width .3s cubic-bezier(.2,.8,.2,1),background-color .3s ease}'
+		. $f . ' .aardling-toc-float__lines{display:flex;flex-direction:column;align-items:flex-start;max-height:65vh;overflow:hidden;padding:16px;border-radius:12px;cursor:pointer;transition:background-color .2s ease}'
+		. $f . ' .aardling-toc-float__line{display:block;flex:none;width:22px;height:3px;border-radius:2px;background:var(--tf-bar);'
+		. 'transition:width .3s cubic-bezier(.2,.8,.2,1),background-color .3s ease,height .3s ease,margin-top .3s ease,opacity .3s ease}'
+		. $f . ' .aardling-toc-float__line+.aardling-toc-float__line{margin-top:9px}'
 		. $f . ' .aardling-toc-float__line--sub{width:13px;margin-left:9px}'
 		. $f . ' .aardling-toc-float__line.is-current{width:28px;background:var(--tf-strong)}'
 		. $f . ' .aardling-toc-float__line--sub.is-current{width:19px}'
@@ -212,9 +230,15 @@ add_action( 'wp_head', function () {
 		. 'box-shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.12)}'
 		. $f . ' .aardling-toc-float__label{display:block;margin:0 0 .5rem;font-size:13px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--tf-strong)}'
 		. $f . ' .aardling-toc-float__list{list-style:none;margin:0;padding:0;font-size:16px}'
-		. $f . ' .aardling-toc-float__list li{margin:0;opacity:0;transform:translateX(-4px);transition:opacity .2s ease,transform .26s cubic-bezier(.2,.8,.2,1);transition-delay:calc(var(--i,0) * 25ms)}'
+		. $f . ' .aardling-toc-float__list li{display:grid;grid-template-rows:1fr;overflow:hidden;margin:0;opacity:0;transform:translateX(-4px);'
+		. 'transition:opacity .2s ease,transform .26s cubic-bezier(.2,.8,.2,1),grid-template-rows .3s ease;transition-delay:calc(min(var(--i,0),12) * 25ms)}'
+		. $f . ' .aardling-toc-float__list li>a{min-height:0}'
 		. $f . ' .aardling-toc-float__inner:hover li,' . $f . ' .aardling-toc-float__inner:focus-within li{opacity:1;transform:none}'
-		. $f . ' .aardling-toc-float__list a{display:block;padding:6px 0;color:var(--tf-text);text-decoration:none;transition:color .15s ease}'
+		// With the script on, the h3s of other sections fold away, in the bar and the list.
+		. $f . '.is-live .aardling-toc-float__line--sub:not(.is-open){height:0;margin-top:0;opacity:0}'
+		. $f . '.is-live .aardling-toc-float__sub:not(.is-open){grid-template-rows:0fr;opacity:0;transition-delay:0s}'
+		. $f . '.is-live .aardling-toc-float__sub:not(.is-open)>a{padding-top:0;padding-bottom:0}'
+		. $f . ' .aardling-toc-float__list a{display:block;padding:6px 0;color:var(--tf-text);text-decoration:none;transition:color .15s ease,padding .3s ease}'
 		. $dark . ' .aardling-toc-float__list a{color:var(--tf-text)}'
 		. $f . ' .aardling-toc-float__sub a{padding-left:1em;font-size:.92em}'
 		. $f . ' .aardling-toc-float__list a:hover,' . $f . ' .aardling-toc-float__list a:focus,' . $f . ' .aardling-toc-float__list a.is-current,'
