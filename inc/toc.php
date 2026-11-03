@@ -15,6 +15,10 @@
  *   opens the list beside it. A few lines of script mark the section being read and show only
  *   the h2s plus the h3s of that section, in the bar and the list, so long lists stay short; the
  *   h3s fold open and shut as the reader moves on. Without the script everything shows.
+ * - With the Read Progress Button on the page, the script hangs the bar right under that round
+ *   button (or above it, in a bottom corner), as a pill of the same width and glass, shown while
+ *   the post's sections are on screen; the list opens towards the text. It keeps clear of the
+ *   previous and next arrows. Without the button, or without the script, it stays in the margin.
  * - Headings without an id get one from their text; the block editor usually gives them one.
  * - Titled "Contents" on posts tagged English, otherwise in the site's language ("Inhoud").
  * - Colours follow Deluminator's dark palette. Has its own switch on Appearance > Aardling
@@ -180,8 +184,18 @@ var h=a.map(function(x){return document.getElementById(decodeURIComponent(x.hash
 function mark(){w=false;var c=-1,y=window.innerHeight*0.3+2;h.forEach(function(e,i){if(e&&e.getBoundingClientRect().top<=y){c=i;}});
 var g=c<0?'':a[c].parentNode.getAttribute('data-g');
 a.forEach(function(x,i){var on=i===c,open=x.parentNode.getAttribute('data-g')===g;x.classList.toggle('is-current',on);if(on){x.setAttribute('aria-current','true');}else{x.removeAttribute('aria-current');}
-x.parentNode.classList.toggle('is-open',open);if(l[i]){l[i].classList.toggle('is-current',on);l[i].classList.toggle('is-open',open);}});}
-n.classList.add('is-live');window.addEventListener('scroll',function(){if(!w){w=true;window.requestAnimationFrame(mark);}},{passive:true});mark();})();
+x.parentNode.classList.toggle('is-open',open);if(l[i]){l[i].classList.toggle('is-current',on);l[i].classList.toggle('is-open',open);}});dock(c);}
+var rpb=document.querySelector('.rpb'),inner=n.querySelector('.aardling-toc-float__inner'),bar=n.querySelector('.aardling-toc-float__lines'),ec=document.querySelector('.entry-content');
+function dock(c){var r=rpb&&window.innerWidth>=1168?rpb.getBoundingClientRect():null,docked=!!(r&&r.width);n.classList.toggle('is-docked',docked);
+if(!docked){inner.removeAttribute('style');bar.style.maxHeight='';return;}
+var vw=window.innerWidth,vh=window.innerHeight,right=r.left+r.width/2>vw/2,bottom=r.top+r.height/2>vh/2,st=inner.style;
+n.classList.toggle('is-docked-right',right);n.classList.toggle('is-docked-bottom',bottom);
+st.left=right?'auto':r.left+'px';st.right=right?(vw-r.right)+'px':'auto';st.top=bottom?'auto':(r.bottom+8)+'px';st.bottom=bottom?(vh-r.top+8)+'px':'auto';
+var room=bottom?r.top-8:vh-r.bottom-8,arrow=document.querySelector(right?'.aardling-nav__link--next':'.aardling-nav__link--prev'),q=arrow&&arrow.getBoundingClientRect();
+if(q&&q.width){room=bottom?r.top-8-q.bottom:q.top-r.bottom-8;}bar.style.maxHeight=Math.max(80,room-12)+'px';
+n.classList.toggle('is-on',c>=0&&!!ec&&ec.getBoundingClientRect().bottom>vh*0.3);}
+function soon(){if(!w){w=true;window.requestAnimationFrame(mark);}}
+n.classList.add('is-live');window.addEventListener('scroll',soon,{passive:true});window.addEventListener('resize',soon);mark();})();
 JS;
 }
 
@@ -209,14 +223,16 @@ add_action( 'wp_head', function () {
 		. '.aardling-toc-float{display:none}'
 		. '@media screen and (min-width:1168px){.aardling-toc{display:none}.site-content:has(.aardling-toc-float){overflow:clip;display:flow-root}'
 		. $f . '{display:block;position:sticky;top:30vh;z-index:20;height:0;margin:0;max-width:none;'
-		. '--tf-bg:#fff;--tf-line:#e3e6e8;--tf-hover:#f1f2f3;--tf-bar:#a6abb1;--tf-text:#6a737c;--tf-strong:#0c0d0e;font-family:' . $sans . ';line-height:1.35;hyphens:manual}}'
+		. '--tf-bg:#fff;--tf-line:#e3e6e8;--tf-hover:#f1f2f3;--tf-bar:#8b9198;--tf-text:#6a737c;--tf-strong:#0c0d0e;font-family:' . $sans . ';line-height:1.35;hyphens:manual}}'
 		. $dark . '{--tf-bg:var(--dl-surface);--tf-line:var(--dl-line);--tf-hover:var(--dl-surface-2);--tf-bar:var(--dl-muted);--tf-text:var(--dl-muted);--tf-strong:var(--dl-strong)}'
 		. $f . ' .aardling-toc-float__inner{position:absolute;top:0;right:100%;margin-right:1.5rem}'
-		// Frosted glass in the page colour behind the lines, so they read over photos too; on a plain
-		// page it barely shows. Pointing at it makes the glass more solid.
+		// Frosted glass in the page colour behind the lines, nearly solid, so they read over photos
+		// too; on a plain page it barely shows. Pointing at it makes the glass more solid.
 		. $f . ' .aardling-toc-float__lines{display:flex;flex-direction:column;align-items:flex-start;max-height:65vh;overflow:hidden;padding:16px;border-radius:12px;cursor:pointer;'
-		. 'background:rgba(255,255,255,.62);background:color-mix(in srgb,var(--tf-bg) 62%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);'
+		. 'background:rgba(255,255,255,.86);background:color-mix(in srgb,var(--tf-bg) 86%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);'
 		. 'box-shadow:0 0 0 1px color-mix(in srgb,var(--tf-line) 60%,transparent);transition:background-color .2s ease}'
+		. $dark . ' .aardling-toc-float__lines{background:color-mix(in srgb,var(--tf-bg) 80%,transparent)}'
+		. $dark . ' .aardling-toc-float__inner:hover .aardling-toc-float__lines,' . $dark . ' .aardling-toc-float__inner:focus-within .aardling-toc-float__lines{background:color-mix(in srgb,var(--tf-hover) 92%,transparent)}'
 		. $f . ' .aardling-toc-float__line{display:block;flex:none;width:22px;height:3px;border-radius:2px;background:var(--tf-bar);'
 		. 'transition:width .3s cubic-bezier(.2,.8,.2,1),background-color .3s ease,height .3s ease,margin-top .3s ease,opacity .3s ease}'
 		. $f . ' .aardling-toc-float__line+.aardling-toc-float__line{margin-top:9px}'
@@ -224,6 +240,19 @@ add_action( 'wp_head', function () {
 		. $f . ' .aardling-toc-float__line.is-current{width:28px;background:var(--tf-strong)}'
 		. $f . ' .aardling-toc-float__line--sub.is-current{width:19px}'
 		. $f . ' .aardling-toc-float__inner:hover .aardling-toc-float__lines,' . $f . ' .aardling-toc-float__inner:focus-within .aardling-toc-float__lines{background:var(--tf-hover);background:color-mix(in srgb,var(--tf-hover) 90%,transparent)}'
+		// Docked to the Read Progress Button (the script sets is-docked and the position): fixed, the
+		// button's 44 px width, pill-shaped, the button's glass, fading in while the sections are on
+		// screen (is-on).
+		. $f . '.is-docked{z-index:99998}'
+		. $f . '.is-docked .aardling-toc-float__inner{position:fixed;margin:0;opacity:0;visibility:hidden;transition:opacity .2s ease,visibility 0s linear .2s}'
+		. $f . '.is-docked.is-on .aardling-toc-float__inner{opacity:1;visibility:visible;transition-delay:0s}'
+		. $f . '.is-docked .aardling-toc-float__lines{box-sizing:border-box;width:44px;padding:14px 11px;border-radius:22px;background:rgba(255,255,255,.86);box-shadow:0 1px 3px rgba(0,0,0,.12)}'
+		. $f . '.is-docked .aardling-toc-float__inner:hover .aardling-toc-float__lines,' . $f . '.is-docked .aardling-toc-float__inner:focus-within .aardling-toc-float__lines{background:rgba(255,255,255,.96)}'
+		. $dark . '.is-docked .aardling-toc-float__lines{background:rgba(30,30,30,.78);box-shadow:0 0 0 1px rgba(255,255,255,.08)}'
+		. $dark . '.is-docked .aardling-toc-float__inner:hover .aardling-toc-float__lines,' . $dark . '.is-docked .aardling-toc-float__inner:focus-within .aardling-toc-float__lines{background:rgba(45,45,45,.92)}'
+		. $f . '.is-docked-right .aardling-toc-float__panel{left:auto;right:100%;padding-left:0;padding-right:10px;transform:translateX(8px) scale(.98);transform-origin:right top}'
+		. $f . '.is-docked-bottom .aardling-toc-float__panel{top:auto;bottom:-8px;transform-origin:left bottom}'
+		. $f . '.is-docked-right.is-docked-bottom .aardling-toc-float__panel{transform-origin:right bottom}'
 		// The list opens beside the lines: it fades in, slides a few pixels and its entries follow one
 		// after another. The panel's padding bridges the gap so the pointer can cross it.
 		. $f . ' .aardling-toc-float__panel{position:absolute;top:-8px;left:100%;padding-left:10px;visibility:hidden;opacity:0;transform:translateX(-8px) scale(.98);transform-origin:left top;'
