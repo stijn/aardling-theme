@@ -12,6 +12,8 @@
  *   from /aardling-reads.json, which Cloudflare caches too and the theme clears whenever the lists
  *   change. Without JavaScript these boxes stay hidden.
  * - Recently is rebuilt when a post is published, updated or unpublished.
+ * - Posts tagged English show the boxes in English: titles, dates and "years ago". The JSON file
+ *   is the same for every post, so the script formats its dates in the page's language.
  * - On this day is rebuilt then too, and when the day turns in the site's timezone: an hourly
  *   check, on the hour, or the JSON file if it's asked first. One post per earlier year, newest
  *   year first. The box has its own switch on Appearance > Aardling.
@@ -36,7 +38,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 const AARDLING_THEME_READS_PATH    = '/aardling-reads.json';
 const AARDLING_THEME_READS_DAYS    = 7;
 const AARDLING_THEME_READS_GRAPHQL = 'https://api.cloudflare.com/client/v4/graphql';
-const AARDLING_THEME_READS_FORMAT  = 5; // Bump when the stored items change shape; both lists are then rebuilt.
+const AARDLING_THEME_READS_FORMAT  = 6; // Bump when the stored items change shape; both lists are then rebuilt.
 
 /**
  * Box titles, in the site's language. Filter: aardling_theme_reads_labels.
@@ -201,7 +203,8 @@ function aardling_theme_reads_recent() : array {
 /**
  * Posts from today's date in earlier years, in the site's timezone: one per year (the last one
  * that day), newest year first, five at most (one more than a box shows, so the post being read
- * can be left out). Their date line gives the year and how long ago it was.
+ * can be left out). Their date line gives the year and how long ago it was, in the site's language;
+ * year and ago are there too, for the script to say it in the page's language.
  */
 function aardling_theme_reads_onthisday() : array {
 	$today = current_datetime();
@@ -227,7 +230,11 @@ function aardling_theme_reads_onthisday() : array {
 		$ago            = (int) $today->format( 'Y' ) - $year;
 		$items[ $year ] = array_merge(
 			aardling_theme_reads_item( $post, true ),
-			array( 'date' => $year . ' · ' . ( $nl ? $ago . ' jaar geleden' : $ago . ( 1 === $ago ? ' year ago' : ' years ago' ) ) )
+			array(
+				'date' => $year . ' · ' . ( $nl ? $ago . ' jaar geleden' : $ago . ( 1 === $ago ? ' year ago' : ' years ago' ) ),
+				'year' => $year,
+				'ago'  => $ago,
+			)
 		);
 		if ( 5 === count( $items ) ) {
 			break;
@@ -552,20 +559,24 @@ function aardling_theme_reads_render() : void {
 	}
 	$done = true;
 
-	$related = aardling_theme_reads_related( $post );
-	printf(
-		'<section class="aardling-reads" aria-label="%s" data-post="%d" data-src="%s"%s>%s%s%s%s</section>' . "\n",
-		esc_attr( aardling_theme_reads_labels()['section'] ),
-		(int) $post->ID,
-		esc_url( home_url( AARDLING_THEME_READS_PATH ) ),
-		aardling_theme_switch( 'reads_thumbs' ) ? ' data-thumbs' : '',
-		$related ? aardling_theme_reads_box( 'related', $related ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the box.
-		aardling_theme_reads_box( 'trending' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		aardling_theme_reads_box( 'recent' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		aardling_theme_switch( 'reads_onthisday' ) ? aardling_theme_reads_box( 'onthisday' ) : '' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-	);
-	// noptimize: Autoptimize leaves it where it is, right after the boxes it fills.
-	echo '<!--noptimize--><script>' . aardling_theme_reads_script() . '</script><!--/noptimize-->' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	// In English on posts tagged English: titles, labels and the Suggested posts' dates.
+	aardling_theme_in_post_language( $post, function () use ( $post ) {
+		$related = aardling_theme_reads_related( $post );
+		printf(
+			'<section class="aardling-reads" aria-label="%s" data-post="%d" data-src="%s" data-lang="%s"%s>%s%s%s%s</section>' . "\n",
+			esc_attr( aardling_theme_reads_labels()['section'] ),
+			(int) $post->ID,
+			esc_url( home_url( AARDLING_THEME_READS_PATH ) ),
+			0 === strpos( get_locale(), 'nl' ) ? 'nl' : 'en',
+			aardling_theme_switch( 'reads_thumbs' ) ? ' data-thumbs' : '',
+			$related ? aardling_theme_reads_box( 'related', $related ) : '', // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the box.
+			aardling_theme_reads_box( 'trending' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aardling_theme_reads_box( 'recent' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			aardling_theme_switch( 'reads_onthisday' ) ? aardling_theme_reads_box( 'onthisday' ) : '' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		);
+		// noptimize: Autoptimize leaves it where it is, right after the boxes it fills.
+		echo '<!--noptimize--><script>' . aardling_theme_reads_script() . '</script><!--/noptimize-->' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+	} );
 }
 
 // comments_template() asks for the template file just before it prints the comments; the boxes go
@@ -579,16 +590,20 @@ add_action( 'get_footer', 'aardling_theme_reads_render', 10 );
 /**
  * Fills Trending (at least 3 posts), Recently and On this day (at least 1) from the JSON file,
  * leaving out the post being read; each post with its image when the section has data-thumbs. Text goes in as text.
+ * Dates follow the section's data-lang: on English pages Recently's dates are written out in
+ * English from their ISO date, and On this day says "years ago".
  */
 function aardling_theme_reads_script() : string {
 	return <<<'JS'
-(function(){var s=document.querySelector('.aardling-reads');if(!s||!window.fetch){return;}var cur=parseInt(s.getAttribute('data-post'),10),th=s.hasAttribute('data-thumbs');
+(function(){var s=document.querySelector('.aardling-reads');if(!s||!window.fetch){return;}var cur=parseInt(s.getAttribute('data-post'),10),th=s.hasAttribute('data-thumbs'),en=s.getAttribute('data-lang')==='en';
+function when(p){if(p.year){return p.year+' · '+p.ago+(en?(p.ago===1?' year ago':' years ago'):' jaar geleden');}var m=/^(\d{4})-(\d{2})-(\d{2})/.exec(p.iso||'');
+if(en&&m&&window.Intl){try{return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(Date.UTC(+m[1],m[2]-1,+m[3])));}catch(e){}}return p.date;}
 fetch(s.getAttribute('data-src'),{cache:'no-cache',credentials:'omit'}).then(function(r){return r.ok?r.json():null;}).then(function(d){if(!d){return;}
 [['trending',3],['recent',1],['onthisday',1]].forEach(function(k){var box=s.querySelector('[data-list="'+k[0]+'"]'),list=box&&box.querySelector('ol,ul');
 var items=(d[k[0]]||[]).filter(function(p){return p&&p.id!==cur&&/^https?:\/\//.test(p.url||'');}).slice(0,4);if(!list||items.length<k[1]){return;}
 items.forEach(function(p){var li=document.createElement('li'),a=document.createElement('a');li.className='aardling-reads__item';
 if(th&&p.thumb){var im=document.createElement('img');im.setAttribute('loading','lazy');im.setAttribute('decoding','async');if(p.thumb_w&&p.thumb_h){im.width=p.thumb_w;im.height=p.thumb_h;}im.alt='';im.className='aardling-reads__thumb';im.src=p.thumb;li.appendChild(im);li.className+=' aardling-reads__item--thumb';}
-if(p.date){var t=document.createElement('time');t.className='aardling-reads__date';t.dateTime=p.iso||'';t.textContent=p.date;li.appendChild(t);}
+if(p.date){var t=document.createElement('time');t.className='aardling-reads__date';t.dateTime=p.iso||'';t.textContent=when(p);li.appendChild(t);}
 a.className='aardling-reads__title';a.href=p.url;a.textContent=p.title||'';li.appendChild(a);list.appendChild(li);});box.hidden=false;});}).catch(function(){});})();
 JS;
 }

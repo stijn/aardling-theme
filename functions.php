@@ -5,7 +5,37 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.7.1' );
+define( 'AARDLING_THEME_VERSION', '1.7.2' );
+
+/**
+ * Posts tagged English get the theme's own labels and dates in English, whatever the site's
+ * language (Dutch on aardling.com).
+ *
+ * @param int|WP_Post|null $post Post; the current one by default.
+ */
+function aardling_theme_is_english( $post = null ) : bool {
+	$post = get_post( $post );
+	return $post instanceof WP_Post && has_tag( 'english', $post );
+}
+
+/**
+ * Run $render in English on posts tagged English, so labels, translations (Twenty Nineteen's
+ * "Previous Post") and month names come out in English; elsewhere in the site's language.
+ *
+ * @param int|WP_Post|null $post   Post.
+ * @param callable         $render Prints or returns the part.
+ * @return mixed What $render returns.
+ */
+function aardling_theme_in_post_language( $post, callable $render ) {
+	$switched = aardling_theme_is_english( $post ) && 0 !== strpos( get_locale(), 'en' ) && switch_to_locale( 'en_US' );
+	try {
+		return $render();
+	} finally {
+		if ( $switched ) {
+			restore_previous_locale();
+		}
+	}
+}
 
 require_once __DIR__ . '/inc/updater.php';
 require_once __DIR__ . '/inc/cloudflare.php';

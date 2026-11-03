@@ -34,8 +34,7 @@ const AARDLING_THEME_TOC_MARK = '<!--aardling-toc-->';
  * The list's title: English on posts tagged English, otherwise in the site's language.
  */
 function aardling_theme_toc_label() : string {
-	$post = get_post();
-	if ( $post instanceof WP_Post && has_tag( 'english', $post ) ) {
+	if ( aardling_theme_is_english() ) {
 		return 'Contents';
 	}
 	return 0 === strpos( get_locale(), 'nl' ) ? 'Inhoud' : 'Contents';
@@ -210,17 +209,21 @@ add_action( 'wp_head', function () {
 		. '.aardling-toc-float{display:none}'
 		. '@media screen and (min-width:1168px){.aardling-toc{display:none}.site-content:has(.aardling-toc-float){overflow:clip;display:flow-root}'
 		. $f . '{display:block;position:sticky;top:30vh;z-index:20;height:0;margin:0;max-width:none;'
-		. '--tf-bg:#fff;--tf-line:#e3e6e8;--tf-hover:#f1f2f3;--tf-bar:#bcbfc3;--tf-text:#6a737c;--tf-strong:#0c0d0e;font-family:' . $sans . ';line-height:1.35;hyphens:manual}}'
+		. '--tf-bg:#fff;--tf-line:#e3e6e8;--tf-hover:#f1f2f3;--tf-bar:#a6abb1;--tf-text:#6a737c;--tf-strong:#0c0d0e;font-family:' . $sans . ';line-height:1.35;hyphens:manual}}'
 		. $dark . '{--tf-bg:var(--dl-surface);--tf-line:var(--dl-line);--tf-hover:var(--dl-surface-2);--tf-bar:var(--dl-muted);--tf-text:var(--dl-muted);--tf-strong:var(--dl-strong)}'
 		. $f . ' .aardling-toc-float__inner{position:absolute;top:0;right:100%;margin-right:1.5rem}'
-		. $f . ' .aardling-toc-float__lines{display:flex;flex-direction:column;align-items:flex-start;max-height:65vh;overflow:hidden;padding:16px;border-radius:12px;cursor:pointer;transition:background-color .2s ease}'
+		// Frosted glass in the page colour behind the lines, so they read over photos too; on a plain
+		// page it barely shows. Pointing at it makes the glass more solid.
+		. $f . ' .aardling-toc-float__lines{display:flex;flex-direction:column;align-items:flex-start;max-height:65vh;overflow:hidden;padding:16px;border-radius:12px;cursor:pointer;'
+		. 'background:rgba(255,255,255,.62);background:color-mix(in srgb,var(--tf-bg) 62%,transparent);-webkit-backdrop-filter:blur(10px) saturate(1.3);backdrop-filter:blur(10px) saturate(1.3);'
+		. 'box-shadow:0 0 0 1px color-mix(in srgb,var(--tf-line) 60%,transparent);transition:background-color .2s ease}'
 		. $f . ' .aardling-toc-float__line{display:block;flex:none;width:22px;height:3px;border-radius:2px;background:var(--tf-bar);'
 		. 'transition:width .3s cubic-bezier(.2,.8,.2,1),background-color .3s ease,height .3s ease,margin-top .3s ease,opacity .3s ease}'
 		. $f . ' .aardling-toc-float__line+.aardling-toc-float__line{margin-top:9px}'
 		. $f . ' .aardling-toc-float__line--sub{width:13px;margin-left:9px}'
 		. $f . ' .aardling-toc-float__line.is-current{width:28px;background:var(--tf-strong)}'
 		. $f . ' .aardling-toc-float__line--sub.is-current{width:19px}'
-		. $f . ' .aardling-toc-float__inner:hover .aardling-toc-float__lines,' . $f . ' .aardling-toc-float__inner:focus-within .aardling-toc-float__lines{background:var(--tf-hover)}'
+		. $f . ' .aardling-toc-float__inner:hover .aardling-toc-float__lines,' . $f . ' .aardling-toc-float__inner:focus-within .aardling-toc-float__lines{background:var(--tf-hover);background:color-mix(in srgb,var(--tf-hover) 90%,transparent)}'
 		// The list opens beside the lines: it fades in, slides a few pixels and its entries follow one
 		// after another. The panel's padding bridges the gap so the pointer can cross it.
 		. $f . ' .aardling-toc-float__panel{position:absolute;top:-8px;left:100%;padding-left:10px;visibility:hidden;opacity:0;transform:translateX(-8px) scale(.98);transform-origin:left top;'

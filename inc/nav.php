@@ -87,17 +87,20 @@ add_action( 'wp_footer', function () {
 	if ( ! $post instanceof WP_Post ) {
 		return;
 	}
-	$links = '';
-	foreach ( aardling_theme_nav_adjacent( $post ) as $rel => $adjacent ) {
-		$links .= aardling_theme_nav_link( $adjacent, $rel );
-	}
-	if ( '' !== $links ) {
-		printf(
-			'<nav class="aardling-nav" aria-label="%s">%s</nav>' . "\n",
-			esc_attr( 0 === strpos( get_locale(), 'nl' ) ? 'Vorig en volgend bericht' : 'Previous and next post' ),
-			$links // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the link.
-		);
-	}
+	// In English on posts tagged English, labels included.
+	aardling_theme_in_post_language( $post, function () use ( $post ) {
+		$links = '';
+		foreach ( aardling_theme_nav_adjacent( $post ) as $rel => $adjacent ) {
+			$links .= aardling_theme_nav_link( $adjacent, $rel );
+		}
+		if ( '' !== $links ) {
+			printf(
+				'<nav class="aardling-nav" aria-label="%s">%s</nav>' . "\n",
+				esc_attr( 0 === strpos( get_locale(), 'nl' ) ? 'Vorig en volgend bericht' : 'Previous and next post' ),
+				$links // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in the link.
+			);
+		}
+	} );
 }, 5 );
 
 // Styles, on single posts while the arrows are on. Colours are variables, switched to

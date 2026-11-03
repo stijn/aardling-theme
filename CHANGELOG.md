@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.2
+- Posts tagged English show all of the theme's own labels in English, not only the contents list: the reading boxes (Suggested reads, Trending, Recently, On this day), their dates ("29 October 2026", "14 years ago"), and the arrows (Previous Post, Next Post). The theme switches WordPress to English just while it builds those parts (`aardling_theme_in_post_language()`). Other posts stay Dutch.
+- The JSON file's On this day entries carry the year and how many years ago, so the script can word them in the page's language. The stored lists are rebuilt on the next request.
+- The contents bar sits on frosted glass in the page colour (Deluminator's dark surface in dark mode), so its lines stay readable over photos; on a plain page it barely shows. Its lines are a little darker.
+
 ## 1.7.1
 - Long contents lists stay short: the bar and the list show the h2s, plus only the h3s of the section being read. They fold open and shut as the reader moves on. Patriarchal Panic's 80 entries become 10 headings plus the current section's subheadings, so the bar no longer runs off the screen. Without the script everything shows.
 - The contents list is titled "Contents" on posts tagged English, "Inhoud" on the others.
