@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0
+- The contents list on wide screens (from 1168 px): a small bar of lines in the left margin, one per heading, after Stack Overflow's. It stays in view while the sections scroll past and leaves with the end of the post. Pointing at it, or tabbing into it, opens the list beside it: it fades and slides in, its entries follow one after another, and the section being read is marked in the bar and the list. Colours follow Deluminator's dark palette; motion stops for readers who ask for less. Narrower screens keep the box.
+- A few lines of script mark the section being read; without them the list still works.
+- The contents list now goes before the top-level block that holds the first heading, so a heading inside a cover or group no longer gets the box inside it.
+- On posts with the bar, Twenty Nineteen's `overflow: hidden` on `.site-content` becomes `overflow: clip`, which looks the same but lets the bar stick.
+- The 36 posts that had Rank Math's own contents block (23 published, 13 drafts) no longer have it, so there's one list per post. Each post's previous version is kept as a revision.
+
 ## 1.6.0
 - On this day: a fourth reading box with posts from today's date in earlier years, one per year, newest year first, each with its year and how long ago ("2012 · 14 jaar geleden"). It fills from `/aardling-reads.json` like Trending and Recently, and is rebuilt when the day turns (an hourly check on the hour, in the site's timezone) and whenever a post changes. On 360 days of the year at least one earlier year has a post.
 - Contents list for long posts: posts with three or more h2 headings get a list of them (with their h3s) right before the first heading, in a box readers can fold shut. Made with the page, no script; headings without an id get one (`inc/toc.php`).
