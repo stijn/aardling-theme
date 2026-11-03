@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.7.2' );
+define( 'AARDLING_THEME_VERSION', '1.7.3' );
 
 /**
  * Posts tagged English get the theme's own labels and dates in English, whatever the site's
@@ -36,6 +36,18 @@ function aardling_theme_in_post_language( $post, callable $render ) {
 		}
 	}
 }
+
+// The page's language on posts tagged English: <html lang="en"> for screen readers, browsers'
+// translation offers and search engines, and og:locale en_GB in Rank Math's share tags.
+add_filter( 'language_attributes', function ( $output ) {
+	if ( is_singular() && aardling_theme_is_english( get_queried_object_id() ) ) {
+		$output = (string) preg_replace( '/\blang="[^"]*"/', 'lang="en"', (string) $output );
+	}
+	return $output;
+} );
+add_filter( 'rank_math/opengraph/facebook/og_locale', function ( $locale ) {
+	return is_singular() && aardling_theme_is_english( get_queried_object_id() ) ? 'en_GB' : $locale;
+} );
 
 require_once __DIR__ . '/inc/updater.php';
 require_once __DIR__ . '/inc/cloudflare.php';

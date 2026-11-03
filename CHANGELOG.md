@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.7.3
+- Posts tagged English say so: `<html lang="en">` instead of `nl-NL`, so screen readers read them with an English voice and browsers don't offer to translate them from Dutch, and Rank Math's `og:locale` is `en_GB` there.
+
 ## 1.7.2
 - Posts tagged English show all of the theme's own labels in English, not only the contents list: the reading boxes (Suggested reads, Trending, Recently, On this day), their dates ("29 October 2026", "14 years ago"), and the arrows (Previous Post, Next Post). The theme switches WordPress to English just while it builds those parts (`aardling_theme_in_post_language()`). Other posts stay Dutch.
 - The JSON file's On this day entries carry the year and how many years ago, so the script can word them in the page's language. The stored lists are rebuilt on the next request.
