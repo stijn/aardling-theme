@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.9.0' );
+define( 'AARDLING_THEME_VERSION', '1.10.0' );
 
 /**
  * Posts tagged English get the theme's own labels and dates in English, whatever the site's
@@ -58,6 +58,16 @@ require_once __DIR__ . '/inc/reads.php';
 require_once __DIR__ . '/inc/nav.php';
 require_once __DIR__ . '/inc/toc.php';
 require_once __DIR__ . '/inc/comments.php';
+require_once __DIR__ . '/inc/footnotes.php';
+
+/**
+ * No feed links per tag, category or post, and no oEmbed discovery links, in the page head.
+ * Bots followed them to about 7,000 term feeds and to /wp-json/oembed/ (555 calls in a day),
+ * none of which Cloudflare caches, so PHP built each one. The site's main feed link stays;
+ * link previews come from Rank Math's Open Graph tags.
+ */
+remove_action( 'wp_head', 'feed_links_extra', 3 );
+remove_action( 'wp_head', 'wp_oembed_add_discovery_links' );
 
 /**
  * The PWA plugin was removed on 2026-11-02, but browsers that installed its

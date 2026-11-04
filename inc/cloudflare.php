@@ -280,6 +280,20 @@ add_action( 'wp_trash_post', function ( $post_id ) {
 	}
 } );
 
+// Aardling Schuif writes a post's content straight to the table (footnote conversion, drop caps):
+// no save hooks run and no date changes. Clear that post's page here, from WP Super Cache and
+// Cloudflare; its listings show excerpts, which don't change.
+add_action( 'aardling_schuif_post_content_written', function ( $post_id ) {
+	if ( ! aardling_theme_cloudflare_is_published( $post_id ) ) {
+		return;
+	}
+	$url = get_permalink( (int) $post_id );
+	if ( function_exists( 'wpsc_delete_url_cache' ) && $url ) {
+		wpsc_delete_url_cache( $url );
+	}
+	aardling_theme_cloudflare_queue_url( $url );
+} );
+
 // Terms added to or removed from a published post: the post and the old and new term archives.
 add_action( 'set_object_terms', function ( $object_id, $terms, $tt_ids, $taxonomy, $append, $old_tt_ids ) {
 	if ( ! aardling_theme_cloudflare_is_published( $object_id ) || ! is_taxonomy_viewable( $taxonomy ) ) {

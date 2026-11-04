@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.10.0
+- Footnotes open in a pop-up. Tapping a footnote number opens its note right beside it, below the number or above it when there's no room; Escape, a tap elsewhere or the same number again closes it, and the page doesn't move. The notes are also listed at the end of the post, where the number jumps to without script, with an arrow back. The pop-up is the browser's own popover: no library, about 1.5 KB of script and styles, and only on pages with footnotes. Colours follow Deluminator's dark palette. The numbers keep the blue pill the site had.
+- The theme renders Modern Footnotes' notes itself (`[mfn]…[/mfn]`, `[modern_footnote]` and the editor button's `<mfn>` tags, including notes the editor split into pieces around italics), so that plugin's script, stylesheet and the jQuery its script needed (about 40 KB on 122 posts) no longer load, and the plugin can be deactivated and deleted. While it's active its hooks are switched off.
+- WordPress's own footnotes (the Footnotes block) get the same numbers and pop-up. Aardling Schuif 1.9.0 converts the existing notes to them.
+- No feed links per tag, category or post, and no oEmbed discovery links, in the page head. Bots followed them to about 7,000 term feeds and to `/wp-json/oembed/` (555 calls in one day), none of which Cloudflare caches. The main `/feed/` link stays; link previews come from Rank Math's Open Graph tags.
+- A post whose content Aardling Schuif writes straight to the database (footnote conversion, drop caps) is cleared from WP Super Cache and Cloudflare (`aardling_schuif_post_content_written`).
+- Tested on WordPress 7.1.4 with PHP 8.0 and 8.5 (and linted on 7.4): fixture posts modelled on the site's own, before and after conversion, in Chrome at 1280 and 375 px, and in the block editor.
+
 ## 1.9.0
 - No more jQuery on the front end. WP Mobile Bottom Menu's only script updates the counter of YITH WooCommerce Wishlist, and it brought in jQuery and jQuery Migrate (38 KB) to do so. The site has no wishlist, so the theme drops that script, and jQuery goes with it. With YITH WooCommerce Wishlist installed, the script stays.
 - Only the first image on a page loads straight away; the others wait until they scroll into view. WordPress loads the first three at once, and on the homepage the second and third posts' photos (about 90 KB on a phone) competed with the first, which is the largest thing on screen.
