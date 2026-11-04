@@ -4,6 +4,7 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
+- No feed links per tag, category or post, and no oEmbed discovery links, in the page head (`feed_links_extra`, `wp_oembed_add_discovery_links`); the main `/feed/` link stays. Bots follow them to about 7,000 term feeds and to `/wp-json/oembed/` (555 calls in a day), which Cloudflare doesn't cache and PHP has to build. Link previews keep working from Rank Math's Open Graph tags. Ships with the next release, not alone: every release empties Cloudflare's cache.
 
 ## 1.9.0 (2026-11-04)
 - No jQuery on the front end: WP Mobile Bottom Menu's wishlist script dropped.
