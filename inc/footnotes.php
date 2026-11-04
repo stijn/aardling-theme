@@ -198,11 +198,13 @@ function aardling_theme_footnotes_on_page() : bool {
 
 function aardling_theme_footnotes_css() : string {
 	$sans = '-apple-system,BlinkMacSystemFont,"Segoe UI","Roboto","Oxygen","Ubuntu","Cantarell","Fira Sans","Droid Sans","Helvetica Neue",sans-serif';
-	return ':root{--aardling-fn-bg:#fff;--aardling-fn-line:#e6e6e6;--aardling-fn-text:#111;--aardling-fn-muted:#767676;--aardling-fn-mark:#4169e1}'
-		. 'html.deluminator-palette.deluminator-dark{--aardling-fn-bg:var(--dl-surface);--aardling-fn-line:var(--dl-line);--aardling-fn-text:var(--dl-text);--aardling-fn-muted:var(--dl-muted)}'
+	return ':root{--aardling-fn-bg:#fff;--aardling-fn-line:#e6e6e6;--aardling-fn-text:#111;--aardling-fn-muted:#767676;--aardling-fn-mark:#4169e1;--aardling-fn-mark-text:#fff}'
+		. 'html.deluminator-palette.deluminator-dark{--aardling-fn-bg:var(--dl-surface);--aardling-fn-line:var(--dl-line);--aardling-fn-text:var(--dl-text);--aardling-fn-muted:var(--dl-muted);--aardling-fn-mark:var(--dl-accent);--aardling-fn-mark-text:var(--dl-accent-text)}'
 		// The marker: the blue pill the site had with Modern Footnotes.
 		. 'sup.fn,.aardling-fn-pop__n{background-color:var(--aardling-fn-mark);border-radius:16px;font-family:"Courier New",Courier,monospace;padding:.1rem .1618rem;line-height:initial;vertical-align:0}'
-		. 'sup.fn a,.entry .entry-content sup.fn a{color:#fff;font-weight:700;text-decoration:none}'
+		// Deluminator's dark mode colours every link in a post with a stronger selector; the number
+		// keeps its own colours there, the accent pair Deluminator gives footnote markers.
+		. 'sup.fn a,.entry .entry-content sup.fn a,html.deluminator-palette.deluminator-dark sup.fn a,html.deluminator-palette.deluminator-dark .entry .entry-content sup.fn a,html.deluminator-palette.deluminator-dark .entry .entry-content sup.fn a:visited,html.deluminator-palette.deluminator-dark .entry .entry-content sup.fn a:hover{color:var(--aardling-fn-mark-text);font-weight:700;text-decoration:none}'
 		. 'sup.fn a:focus-visible{outline:2px solid var(--aardling-fn-mark);outline-offset:3px}'
 		// The list at the end.
 		. '.entry .entry-content .wp-block-footnotes{margin-top:2em;padding-top:1em;border-top:1px solid var(--aardling-fn-line);font-family:' . $sans . ';font-size:.71111em;line-height:1.6;color:var(--aardling-fn-muted)}'
@@ -212,7 +214,7 @@ function aardling_theme_footnotes_css() : string {
 		// The pop-up.
 		. '.aardling-fn-pop{position:absolute;inset:auto;margin:0;box-sizing:border-box;width:max-content;max-width:min(24rem,calc(100vw - 32px));padding:.75rem 1rem;border:1px solid var(--aardling-fn-line);border-radius:10px;background:var(--aardling-fn-bg);color:var(--aardling-fn-text);box-shadow:0 10px 30px rgba(0,0,0,.18);font-family:' . $sans . ';font-size:.8rem;line-height:1.5;overflow-wrap:anywhere;hyphens:none}'
 		. '.aardling-fn-pop a{color:inherit;text-decoration:underline}'
-		. '.aardling-fn-pop__n{display:inline-block;margin-right:.5em;color:#fff;font-size:.85em;font-weight:700}'
+		. '.aardling-fn-pop__n{display:inline-block;margin-right:.5em;color:var(--aardling-fn-mark-text);font-size:.85em;font-weight:700}'
 		. '.aardling-fn-pop:popover-open{opacity:1;transform:none;transition:opacity .15s,transform .15s}'
 		. '@starting-style{.aardling-fn-pop:popover-open{opacity:0;transform:translateY(.25rem)}}'
 		. '@media (prefers-reduced-motion:reduce){.aardling-fn-pop:popover-open{transition:none}}';

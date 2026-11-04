@@ -4,6 +4,14 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
+- Fewer stylesheets before the first paint: five separate files hold up a phone's first paint by about 0.5–0.9 s (Lighthouse, 5 November). Inline the small ones or combine them.
+
+## 1.11.0 (2026-11-05)
+- Cover photos load when the reader gets near them.
+- Footnote numbers readable in Deluminator's dark mode.
+- "Older posts" and "Newer posts" keep a name for screen readers on phones.
+- Old http:// addresses on the site's own domain shown as https://.
+- WP Super Cache preloads the categories and W taxonomies instead of the tags.
 
 ## 1.10.0 (2026-11-04)
 - Footnotes open in a pop-up beside their number; the list at the end stays.

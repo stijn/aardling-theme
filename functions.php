@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.10.0' );
+define( 'AARDLING_THEME_VERSION', '1.11.0' );
 
 /**
  * Posts tagged English get the theme's own labels and dates in English, whatever the site's
@@ -59,6 +59,7 @@ require_once __DIR__ . '/inc/nav.php';
 require_once __DIR__ . '/inc/toc.php';
 require_once __DIR__ . '/inc/comments.php';
 require_once __DIR__ . '/inc/footnotes.php';
+require_once __DIR__ . '/inc/images.php';
 
 /**
  * No feed links per tag, category or post, and no oEmbed discovery links, in the page head.
@@ -104,6 +105,20 @@ add_filter(
 	function () {
 		return get_template_directory_uri() . '/style.css';
 	}
+);
+
+/**
+ * On phones Twenty Nineteen hides the words of the "Older posts" and "Newer posts" links with
+ * display:none, which leaves screen readers a link without a name. Hide them visually instead.
+ */
+add_action(
+	'wp_enqueue_scripts',
+	function () {
+		if ( ! is_singular() ) {
+			wp_add_inline_style( 'twentynineteen-style', '@media (max-width:767px){.pagination .nav-links .nav-next-text,.pagination .nav-links .nav-prev-text{display:inline;position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap}}' );
+		}
+	},
+	20
 );
 
 /**
@@ -202,6 +217,26 @@ add_filter(
 	},
 	10,
 	2
+);
+
+/**
+ * WP Super Cache's preload (with "Preload tags, categories and other taxonomies" on) walks the
+ * categories and Aardling Schuif's seven W taxonomies instead of the tags. Every /tag/…/ is a 301
+ * to its W term (Redirection), which WP Super Cache can't cache, while the 3,600 W term pages
+ * were never preloaded, so each Cloudflare miss on one was built by PHP. Taxonomies that don't
+ * exist (Schuif switched off) are left out; with none of them, WP Super Cache's own list stays.
+ */
+add_filter(
+	'wp_cache_preload_taxonomies',
+	function ( $taxonomies ) {
+		$preload = array();
+		foreach ( array( 'category', 'wie', 'wat', 'waar', 'waardoor', 'waarmee', 'wanneer', 'hoe' ) as $taxonomy ) {
+			if ( taxonomy_exists( $taxonomy ) ) {
+				$preload[ $taxonomy ] = $taxonomy;
+			}
+		}
+		return count( $preload ) > 1 ? $preload : $taxonomies;
+	}
 );
 
 /**
