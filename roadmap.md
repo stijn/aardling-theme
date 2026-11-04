@@ -5,6 +5,9 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.8.1 (2026-11-04)
+- GA4's tag downloads once instead of twice.
+
 ## 1.8.0 (2026-11-03)
 - Contents bar docked to the Read Progress Button; more contrast over photos.
 

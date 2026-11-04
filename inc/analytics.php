@@ -8,6 +8,10 @@
  *   aardling.com/ptp3/ go to Google from there; WordPress never sees them.
  * - If Site Kit places its Analytics code, only the address of its script changes, so Site Kit's
  *   own events keep working. Otherwise the theme prints the standard Google tag itself.
+ * - Cloudflare also puts its own loader (<script async src="/ptp3/">) at the top of every page it
+ *   sends to a browser. That loader sends nothing until the theme's gtag('config') runs, and with
+ *   the theme's own script the browser downloaded the 190 KB tag twice. So the theme loads the
+ *   script only when Cloudflare's loader isn't on the page; either way one copy runs.
  * - Logged-in users aren't tracked, as with Site Kit's default.
  * - Nothing loads from googletagmanager.com any more, so its DNS prefetch hint goes too.
  * - The measurement ID and the path can be overridden with
@@ -94,11 +98,14 @@ add_action(
 			return;
 		}
 
-		// noptimize: Autoptimize leaves the two tags exactly as they are.
+		// Cloudflare's loader sits above this in <head>, so the check sees it. Any script from the
+		// gateway path counts: the theme's own isn't on the page yet.
+		// noptimize: Autoptimize leaves the tag exactly as it is.
 		printf(
-			"<!--noptimize--><script async src=\"%s\"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',%s);</script><!--/noptimize-->\n",
-			esc_url( add_query_arg( 'id', rawurlencode( $ga4['id'] ), $ga4['url'] ) ),
-			wp_json_encode( $ga4['id'] )
+			"<!--noptimize--><script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config',%s);if(!document.querySelector(%s)){var s=document.createElement('script');s.async=true;s.src=%s;document.head.appendChild(s);}</script><!--/noptimize-->\n",
+			wp_json_encode( $ga4['id'] ),
+			wp_json_encode( 'script[src*="' . wp_parse_url( $ga4['url'], PHP_URL_PATH ) . '"]' ),
+			wp_json_encode( esc_url_raw( add_query_arg( 'id', rawurlencode( $ga4['id'] ), $ga4['url'] ) ) )
 		);
 	},
 	2

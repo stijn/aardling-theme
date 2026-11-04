@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.1
+- GA4 downloads once instead of twice. Cloudflare's Google tag gateway puts its own loader (`<script async src="/ptp3/">`) at the top of every page it sends to a browser, and the theme printed a second one (`/ptp3/?id=…`), so every visitor fetched the 190 KB tag twice and ran it twice. The theme now prints only the `gtag('config')` line, which sends the page view, and adds its own script only when Cloudflare's loader isn't on the page. Tested in Chrome both ways: one download, one page view.
+
 ## 1.8.0
 - The contents bar docks to the Read Progress Button: a pill of the button's 44 px width and glass, right under the round button (above it in a bottom corner), shown while the post's sections are on screen and fading away before and after. The list opens towards the text. It follows the button to whichever corner its settings choose and keeps clear of the previous and next arrows. Without the button, or without the script, the bar stays sticky in the margin.
 - More contrast: the bar's glass is nearly solid (86% instead of 62%), so it stays white over dark photos, and its lines are darker. In dark mode the docked pill uses the button's charcoal glass.
