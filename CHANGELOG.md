@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.0
+- No more jQuery on the front end. WP Mobile Bottom Menu's only script updates the counter of YITH WooCommerce Wishlist, and it brought in jQuery and jQuery Migrate (38 KB) to do so. The site has no wishlist, so the theme drops that script, and jQuery goes with it. With YITH WooCommerce Wishlist installed, the script stays.
+- Only the first image on a page loads straight away; the others wait until they scroll into view. WordPress loads the first three at once, and on the homepage the second and third posts' photos (about 90 KB on a phone) competed with the first, which is the largest thing on screen.
+- The contents bar no longer measures the page while it scrolls. The browser now reports which headings have passed the line where the bar sits (IntersectionObserver), and the script measures only the Read Progress Button and the arrows, on load and on resize. Below 1168 px, where the box shows instead, it watches nothing; before, it measured every heading on every scrolled frame there too, which Lighthouse flagged as a 122 ms forced layout on phones. Tested in Chrome against the old script at 25 scroll positions, including jumps, at 1440 and 1280 px: the same marks, docking and position at each.
+
 ## 1.8.1
 - GA4 downloads once instead of twice. Cloudflare's Google tag gateway puts its own loader (`<script async src="/ptp3/">`) at the top of every page it sends to a browser, and the theme printed a second one (`/ptp3/?id=…`), so every visitor fetched the 190 KB tag twice and ran it twice. The theme now prints only the `gtag('config')` line, which sends the page view, and adds its own script only when Cloudflare's loader isn't on the page. Tested in Chrome both ways: one download, one page view.
 

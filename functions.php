@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.8.1' );
+define( 'AARDLING_THEME_VERSION', '1.9.0' );
 
 /**
  * Posts tagged English get the theme's own labels and dates in English, whatever the site's
@@ -97,15 +97,36 @@ add_filter(
 );
 
 /**
+ * Only the first image on a page loads straight away; WordPress's default is
+ * three. On a phone the homepage's second and third photos sit below the fold,
+ * and on a post only the header photo is in view. The others load as they
+ * scroll into view, so the first one gets the bandwidth.
+ */
+add_filter(
+	'wp_omit_loading_attr_threshold',
+	function () {
+		return 1;
+	}
+);
+
+/**
  * WP Mobile Bottom Menu loads all of Font Awesome (two stylesheets from
  * use.fontawesome.com plus webfonts) for three icons. Drop it and draw those
  * icons with inline SVG masks instead.
+ *
+ * Its one script only updates the counter of YITH WooCommerce Wishlist, and
+ * it brings in jQuery and jQuery Migrate (38 KB) to do so. Without that
+ * plugin there's no counter, so the script goes and jQuery with it.
  */
 add_action(
 	'wp_enqueue_scripts',
 	function () {
 		wp_dequeue_style( 'fa5' );
 		wp_dequeue_style( 'fa5-v4-shims' );
+
+		if ( ! defined( 'YITH_WCWL' ) ) {
+			wp_dequeue_script( 'wp-bnav' );
+		}
 
 		if ( wp_style_is( 'wp-bnav', 'enqueued' ) ) {
 			wp_add_inline_style( 'wp-bnav', aardling_bottom_menu_icons_css() );

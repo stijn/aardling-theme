@@ -5,6 +5,11 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 
+## 1.9.0 (2026-11-04)
+- No jQuery on the front end: WP Mobile Bottom Menu's wishlist script dropped.
+- Only the first image on a page loads straight away.
+- The contents bar no longer measures the page while it scrolls, and does nothing below 1168 px.
+
 ## 1.8.1 (2026-11-04)
 - GA4's tag downloads once instead of twice.
 

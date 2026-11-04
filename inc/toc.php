@@ -167,7 +167,12 @@ add_filter( 'the_content', function ( $content ) {
 }, 20 );
 
 // Marks the section being read (the last heading above the line where the bar sits) and opens the
-// h3s of its h2: every entry carries its h2's number in data-g.
+// h3s of its h2: every entry carries its h2's number in data-g. The browser reports which headings
+// have passed that line (IntersectionObserver), so scrolling never makes the script measure the
+// page. The headings' root runs from far above the page down to the line, so a jump past a heading
+// counts too; the post's runs from the line down, to tell whether the post still reaches below it.
+// It measures only the button and the arrows, which are fixed, on load and on resize. Below
+// 1168 px, where the box shows instead, it watches nothing.
 add_action( 'wp_footer', function () {
 	if ( empty( $GLOBALS['aardling_theme_toc_shown'] ) ) {
 		return;
@@ -178,24 +183,28 @@ add_action( 'wp_footer', function () {
 
 function aardling_theme_toc_script() : string {
 	return <<<'JS'
-(function(){var n=document.querySelector('.aardling-toc-float');if(!n){return;}
+(function(){var n=document.querySelector('.aardling-toc-float'),wide=window.matchMedia&&window.matchMedia('(min-width:1168px)');if(!n||!wide||!window.IntersectionObserver){return;}
 var a=[].slice.call(n.querySelectorAll('.aardling-toc-float__list a')),l=[].slice.call(n.querySelectorAll('.aardling-toc-float__line'));
-var h=a.map(function(x){return document.getElementById(decodeURIComponent(x.hash.slice(1)));}),w=false;
-function mark(){w=false;var c=-1,y=window.innerHeight*0.3+2;h.forEach(function(e,i){if(e&&e.getBoundingClientRect().top<=y){c=i;}});
-var g=c<0?'':a[c].parentNode.getAttribute('data-g');
-a.forEach(function(x,i){var on=i===c,open=x.parentNode.getAttribute('data-g')===g;x.classList.toggle('is-current',on);if(on){x.setAttribute('aria-current','true');}else{x.removeAttribute('aria-current');}
-x.parentNode.classList.toggle('is-open',open);if(l[i]){l[i].classList.toggle('is-current',on);l[i].classList.toggle('is-open',open);}});dock(c);}
+var h=a.map(function(x){return document.getElementById(decodeURIComponent(x.hash.slice(1)));}),up=a.map(function(){return false;}),c=-2,below=false,docked=false,live=false,w=false;
 var rpb=document.querySelector('.rpb'),inner=n.querySelector('.aardling-toc-float__inner'),bar=n.querySelector('.aardling-toc-float__lines'),ec=document.querySelector('.entry-content');
-function dock(c){var r=rpb&&window.innerWidth>=1168?rpb.getBoundingClientRect():null,docked=!!(r&&r.width);n.classList.toggle('is-docked',docked);
-if(!docked){inner.removeAttribute('style');bar.style.maxHeight='';return;}
-var vw=window.innerWidth,vh=window.innerHeight,right=r.left+r.width/2>vw/2,bottom=r.top+r.height/2>vh/2,st=inner.style;
+function mark(){var k=-1;up.forEach(function(u,i){if(u){k=i;}});
+if(k!==c){c=k;var g=c<0?'':a[c].parentNode.getAttribute('data-g');
+a.forEach(function(x,i){var on=i===c,open=x.parentNode.getAttribute('data-g')===g;x.classList.toggle('is-current',on);if(on){x.setAttribute('aria-current','true');}else{x.removeAttribute('aria-current');}
+x.parentNode.classList.toggle('is-open',open);if(l[i]){l[i].classList.toggle('is-current',on);l[i].classList.toggle('is-open',open);}});}
+n.classList.toggle('is-on',docked&&c>=0&&below);}
+var heads=new IntersectionObserver(function(es){es.forEach(function(e){h.forEach(function(x,i){if(x===e.target){up[i]=e.isIntersecting;}});});mark();},{rootMargin:'100000px 0px -70% 0px'});
+var end=new IntersectionObserver(function(es){below=es[es.length-1].isIntersecting;mark();},{rootMargin:'-30% 0px 100000px 0px'});
+function dock(){var r=rpb?rpb.getBoundingClientRect():null,vw=window.innerWidth,vh=window.innerHeight,right=!!r&&r.left+r.width/2>vw/2,bottom=!!r&&r.top+r.height/2>vh/2;
+var arrow=r&&document.querySelector(right?'.aardling-nav__link--next':'.aardling-nav__link--prev'),q=arrow&&arrow.getBoundingClientRect();
+docked=!!(r&&r.width);n.classList.toggle('is-docked',docked);
+if(!docked){inner.removeAttribute('style');bar.style.maxHeight='';mark();return;}
+var room=bottom?r.top-8:vh-r.bottom-8,st=inner.style;if(q&&q.width){room=bottom?r.top-8-q.bottom:q.top-r.bottom-8;}
 n.classList.toggle('is-docked-right',right);n.classList.toggle('is-docked-bottom',bottom);
 st.left=right?'auto':r.left+'px';st.right=right?(vw-r.right)+'px':'auto';st.top=bottom?'auto':(r.bottom+8)+'px';st.bottom=bottom?(vh-r.top+8)+'px':'auto';
-var room=bottom?r.top-8:vh-r.bottom-8,arrow=document.querySelector(right?'.aardling-nav__link--next':'.aardling-nav__link--prev'),q=arrow&&arrow.getBoundingClientRect();
-if(q&&q.width){room=bottom?r.top-8-q.bottom:q.top-r.bottom-8;}bar.style.maxHeight=Math.max(80,room-12)+'px';
-n.classList.toggle('is-on',c>=0&&!!ec&&ec.getBoundingClientRect().bottom>vh*0.3);}
-function soon(){if(!w){w=true;window.requestAnimationFrame(mark);}}
-n.classList.add('is-live');window.addEventListener('scroll',soon,{passive:true});window.addEventListener('resize',soon);mark();})();
+bar.style.maxHeight=Math.max(80,room-12)+'px';mark();}
+function check(){w=false;if(wide.matches!==live){live=wide.matches;if(live){h.forEach(function(e){if(e){heads.observe(e);}});if(ec){end.observe(ec);}}else{heads.disconnect();end.disconnect();}}if(live){dock();}}
+function soon(){if(!w){w=true;window.requestAnimationFrame(check);}}
+n.classList.add('is-live');window.addEventListener('resize',soon);window.addEventListener('load',soon);soon();})();
 JS;
 }
 
