@@ -5,7 +5,7 @@
  * @package Aardling
  */
 
-define( 'AARDLING_THEME_VERSION', '1.11.0' );
+define( 'AARDLING_THEME_VERSION', '1.12.0' );
 
 /**
  * Posts tagged English get the theme's own labels and dates in English, whatever the site's

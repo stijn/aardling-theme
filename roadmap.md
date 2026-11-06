@@ -6,6 +6,9 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
 - Fewer stylesheets before the first paint: five separate files hold up a phone's first paint by about 0.5–0.9 s (Lighthouse, 5 November). Inline the small ones or combine them.
 
+## 1.12.0 (2026-11-06)
+- Google Analytics loads after the page has finished loading (once Cloudflare's Google tag gateway is off).
+
 ## 1.11.0 (2026-11-05)
 - Cover photos load when the reader gets near them.
 - Footnote numbers readable in Deluminator's dark mode.

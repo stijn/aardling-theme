@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.12.0
+- Google Analytics loads after the page has finished loading. The theme still prints the `gtag('config')` line in the head, which only queues the page view; the Google tag (190 KB) that sends it is added once the load event has fired, so on a slow phone it no longer shares the connection with the page's photo and stylesheets (Lighthouse: up to about 0.45 s on phones). Visitors who leave before the page has loaded aren't counted; the reports stay the same otherwise.
+- This takes effect when Cloudflare's Google tag gateway is switched off: while it's on, Cloudflare puts its own loader at the top of every page, which downloads straight away, and the theme adds nothing next to it, so one copy runs either way. The delayed tag comes from googletagmanager.com (`AARDLING_THEME_GA4_SRC` to change it); the Site Kit address rewrite to the gateway is gone.
+- Tested on WordPress 7.1.4 with PHP 7.4 and 8.5 (tests/images): no Google tag on the page before the load event, one tag requested after it and one page view queued, and nothing added next to a gateway loader.
+
 ## 1.11.0
 - Cover photos load when the reader gets near them. Cover blocks with a fixed (parallax) or repeated background show their photo as a CSS background, which browsers download straight away wherever it is on the page: "Patriarchal Panic" made a phone fetch ten section photos (2.4 MB) on arrival, and its header photo had to share the connection with them (Lighthouse: up to 9 s before it appeared). The theme now puts each photo in a CSS variable, and a few lines of script switch it on once its cover is within a screen's height of view. Without script the photos show as before. Applies to every cover with a background photo, old and new markup.
 - Footnote numbers are readable in dark mode. Deluminator colours every link in a post light blue with a stronger selector, which turned the numbers light blue on blue (contrast 1.9:1). In dark mode they now use the accent pair Deluminator gives footnote markers (cream on dark blue, 5:1), also on hover; light mode is unchanged.

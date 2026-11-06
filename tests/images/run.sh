@@ -20,6 +20,11 @@ for n in 1 2 3 4; do php -r '$w=1600;$h=1000;$i=imagecreatetruecolor($w,$h);mt_s
 ls -la wp-content/uploads | head
 wp --user=admin post create "$HERE/covers.html" --post_title="Covers" --post_name=covers --post_status=publish --porcelain > /dev/null
 wp --user=admin post create "$HERE/notes.html" --post_title="Notes" --post_name=notes --post_status=publish --porcelain > /dev/null
+printf '%s\n' '<!-- wp:paragraph -->' '<p>Een pagina met een foto.</p>' '<!-- /wp:paragraph -->' '' '<!-- wp:image -->' '<figure class="wp-block-image"><img src="http://127.0.0.1:8080/wp-content/uploads/cover-1.jpg" alt="Foto"/></figure>' '<!-- /wp:image -->' > /tmp/ga.html
+wp --user=admin post create /tmp/ga.html --post_title="GA" --post_name=ga --post_status=publish --porcelain > /dev/null
+# ?cfloader=1 stands in for Cloudflare's Google tag gateway, which puts its own loader at the top of <head>.
+mkdir -p wp-content/mu-plugins
+printf '%s\n' '<?php' 'add_action( "wp_head", function () { if ( isset( $_GET["cfloader"] ) ) { echo "<script async src=\"/ptp3/\"></script>\n"; } }, 0 );' > wp-content/mu-plugins/cf-loader.php
 for i in 1 2 3 4 5 6 7; do wp post create --post_title="Vulling $i" --post_content="Tekst $i" --post_status=publish --quiet; done
 echo "== preload taxonomies"
 wp eval '

@@ -93,6 +93,40 @@ for (const width of [412, 1280]) {
 	await p.close();
 }
 
+// 5. Google Analytics: the tag only after the page has loaded; nothing extra next to Cloudflare's loader.
+for (const cf of [false, true]) {
+	const p = await b.newPage();
+	await p.setRequestInterception(true);
+	const gtag = [];
+	const views = [];
+	let loaded = false;
+	p.on('request', (r) => {
+		const u = r.url();
+		if (/googletagmanager\.com\/gtag\/js/.test(u)) gtag.push({ u, afterLoad: loaded });
+		if (/google-analytics\.com\/g\/collect/.test(u) || /\/g\/collect\?/.test(u)) {
+			if (/en=page_view/.test(u) || /en=page_view/.test(r.postData() || '')) views.push(u);
+			return r.abort(); // don't send test hits to the real property
+		}
+		if (/cover-1\.jpg/.test(u)) return setTimeout(() => r.continue(), 2500); // keep the load event waiting
+		r.continue();
+	});
+	p.on('load', () => { loaded = true; });
+	await p.goto(`${BASE}/ga/${cf ? '?cfloader=1' : ''}`, { waitUntil: 'domcontentloaded' });
+	await wait(1000);
+	const early = await p.evaluate(() => ({ ready: document.readyState, tags: [...document.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')).filter((x) => /gtag|ptp3/.test(x)) }));
+	await p.waitForFunction(() => document.readyState === 'complete', { timeout: 20000 });
+	await wait(4000);
+	const late = await p.evaluate(() => [...document.querySelectorAll('script[src]')].map((s) => s.getAttribute('src')).filter((x) => /gtag|ptp3/.test(x)));
+	if (cf) {
+		ok(gtag.length === 0 && late.length === 1 && /ptp3/.test(late[0]), `with Cloudflare's loader the theme adds no tag of its own (${late.join(', ')})`);
+	} else {
+		ok(early.ready !== 'complete' && early.tags.length === 0, `before the load event no Google tag is on the page (state ${early.ready}, ${early.tags.length} tags)`);
+		ok(gtag.length === 1 && gtag[0].afterLoad, `one Google tag, requested after the load event (${gtag.length})`);
+		ok(views.length === 1, `one page view sent (${views.length})`);
+	}
+	await p.close();
+}
+
 await b.close();
 if (fails) { console.log(`${fails} browser check(s) failed`); process.exit(1); }
 console.log('all browser checks passed');
