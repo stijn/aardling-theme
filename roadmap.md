@@ -4,6 +4,7 @@ Plans for the Aardling theme. The full detail of each release is in [CHANGELOG.m
 
 ## Next
 - Choose between GA4 and Cloudflare Web Analytics. Both run side by side for now; Trending already reads Cloudflare's numbers.
+- Load Google Analytics after the page (parked, branch `test-112`): the theme queues the page view in the head and adds the Google tag after the load event. It only helps with Cloudflare's Google tag gateway switched off, because the gateway puts its own loader at the top of every page. Tested on 6 November against the live homepage: loaded later from the gateway path (`/ptp3/?id=…`) the tag sends one page view, but loaded from googletagmanager.com it stays silent while the gateway is set up, so switching off the gateway in Cloudflare alone would stop the statistics. Needs the gateway off in both Cloudflare and Google's tag settings, then a live check. Kept the gateway for now: the gain is about 0.3–0.45 s in Lighthouse's slow-phone simulation, less on real connections. The branch's test for a sent page view fails on the 127.0.0.1 test site and should check `google_tag_manager` instead.
 - Fewer stylesheets before the first paint: five separate files hold up a phone's first paint by about 0.5–0.9 s (Lighthouse, 5 November). Inline the small ones or combine them.
 
 ## 1.11.0 (2026-11-05)
